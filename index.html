@@ -1,0 +1,4164 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>All PDF Tools Static</title>
+
+  <!-- Fitur PDF dan gambar memakai CDN. File tetap satu HTML, tetapi fitur PDF butuh internet saat dipakai. -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1e88e5">
+  <link rel="apple-touch-icon" href="icon-192.png">
+
+  <style>
+    :root {
+      --bg: #f7f7fb;
+      --surface: #ffffff;
+      --surface-soft: #f8f8fb;
+      --surface-blue: #fff1f0;
+      --primary: #e5322d;
+      --primary-dark: #c51f1a;
+      --primary-soft: #ffe8e7;
+      --accent: #dfbd18;
+      --accent-soft: #fff4b8;
+      --success: #16a34a;
+      --warning: #f59e0b;
+      --danger: #dc2626;
+      --text: #33333b;
+      --muted: #70727d;
+      --border: #dadbe5;
+      --shadow: 0 8px 24px rgba(32, 33, 40, 0.08);
+      --radius-xl: 8px;
+      --radius-lg: 8px;
+      --radius-md: 8px;
+      --radius-sm: 6px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      padding: 0 16px 40px;
+    }
+
+    button, input, select, textarea { font: inherit; }
+
+    .page {
+      width: 100%;
+      max-width: 1220px;
+      margin: 0 auto;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      margin: 0 -16px;
+      padding: 14px 16px;
+      background: rgba(255, 255, 255, 0.96);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+    }
+
+    .topbar-inner {
+      width: 100%;
+      max-width: 1220px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: #111118;
+      font-size: 1.24rem;
+      font-weight: 1000;
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+    }
+
+    .brand-mark {
+      display: inline-grid;
+      place-items: center;
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      color: white;
+      background: var(--primary);
+      font-size: 0.9rem;
+      font-weight: 1000;
+      letter-spacing: -0.05em;
+    }
+
+    .page-nav {
+      display: inline-flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .nav-tab {
+      border: 1px solid transparent;
+      border-radius: 8px;
+      padding: 10px 13px;
+      background: transparent;
+      color: #2e2f37;
+      font-weight: 900;
+      cursor: pointer;
+      transition: color 0.16s, background 0.16s, border-color 0.16s;
+    }
+
+    .nav-tab:hover,
+    .nav-tab.active {
+      color: var(--primary-dark);
+      background: var(--primary-soft);
+      border-color: #ffd0ce;
+    }
+
+    .app-view { display: none; }
+    .app-view.active { display: block; }
+
+    .hero {
+      text-align: center;
+      padding: 48px 0 30px;
+      margin-bottom: 0;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      color: var(--primary-dark);
+      background: var(--primary-soft);
+      border: 1px solid #ffd0ce;
+      font-size: 0.88rem;
+      font-weight: 800;
+      margin-bottom: 14px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.15rem, 5vw, 3.9rem);
+      letter-spacing: 0;
+      line-height: 1.05;
+    }
+
+    .subtitle {
+      max-width: 780px;
+      margin: 14px auto 0;
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 1.03rem;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 22px;
+      align-items: start;
+      margin-top: 18px;
+    }
+
+    .finance-stack {
+      grid-template-columns: minmax(0, 1fr);
+      max-width: 980px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow);
+      padding: 26px;
+      min-width: 0;
+    }
+
+    .card-wide { grid-column: 1 / -1; }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 15px;
+      margin-bottom: 22px;
+    }
+
+    .icon-box {
+      width: 48px;
+      height: 48px;
+      border-radius: 17px;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      color: white;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      background: var(--primary);
+      box-shadow: none;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.25rem;
+      line-height: 1.25;
+      letter-spacing: -0.02em;
+    }
+
+    .card-desc {
+      margin: 6px 0 0;
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 0.94rem;
+    }
+
+    .converter-shell {
+      display: grid;
+      gap: 22px;
+    }
+
+    .converter-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(235px, 1fr));
+      gap: 20px;
+    }
+
+    .converter-card {
+      min-height: 218px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      padding: 30px;
+      text-align: left;
+      cursor: pointer;
+      transition: border-color 0.16s, box-shadow 0.16s, transform 0.16s;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 20px;
+    }
+
+    .converter-card:hover,
+    .converter-card.active {
+      border-color: #bfc1ce;
+      box-shadow: var(--shadow);
+      transform: translateY(-1px);
+    }
+
+    .converter-card.active {
+      outline: 3px solid var(--primary-soft);
+    }
+
+    .converter-title {
+      display: block;
+      margin: 0;
+      font-size: 1.55rem;
+      color: #34343c;
+      font-weight: 900;
+      line-height: 1.25;
+    }
+
+    .converter-text {
+      display: block;
+      margin: 10px 0 0;
+      max-width: 360px;
+      color: var(--muted);
+      font-size: 1.03rem;
+      line-height: 1.45;
+    }
+
+    .tool-tag {
+      display: inline-flex;
+      align-items: center;
+      margin-top: 12px;
+      padding: 5px 8px;
+      border-radius: 999px;
+      background: #f1f1f5;
+      color: #696b75;
+      font-size: 0.74rem;
+      font-weight: 900;
+    }
+
+    .tool-icon {
+      position: relative;
+      width: 58px;
+      height: 58px;
+      flex: 0 0 auto;
+    }
+
+    .tool-icon::before,
+    .tool-icon::after {
+      content: "";
+      position: absolute;
+      border-radius: 6px;
+    }
+
+    .tool-icon::before {
+      left: 0;
+      top: 0;
+      width: 38px;
+      height: 38px;
+      background: var(--accent-soft);
+    }
+
+    .tool-icon::after {
+      right: 0;
+      bottom: 0;
+      width: 38px;
+      height: 38px;
+      background: var(--accent);
+    }
+
+    .tool-icon span {
+      position: absolute;
+      z-index: 1;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-size: 0.78rem;
+      font-weight: 1000;
+      letter-spacing: 0;
+    }
+
+    .tool-icon .from-mark {
+      left: 7px;
+      top: 8px;
+      width: 22px;
+      height: 22px;
+      color: #8a7100;
+      transform: rotate(180deg);
+    }
+
+    .tool-icon .main-mark {
+      right: 7px;
+      bottom: 8px;
+      width: 28px;
+      height: 24px;
+    }
+
+    .tool-icon.image-to-pdf::before { background: #ffe8a3; }
+    .tool-icon.image-to-pdf::after { background: #e5322d; }
+    .tool-icon.image-to-pdf .main-mark { font-size: 0.72rem; }
+    .tool-icon.green::before { background: #dff4df; }
+    .tool-icon.green::after { background: #5da958; }
+    .tool-icon.blue::before { background: #dce9ff; }
+    .tool-icon.blue::after { background: #5d7fc4; }
+    .tool-icon.orange::before { background: #ffe2d4; }
+    .tool-icon.orange::after { background: #ff6848; }
+    .tool-icon.purple::before { background: #ead8eb; }
+    .tool-icon.purple::after { background: #a85d9d; }
+    .tool-icon.gray::before { background: #eeeef3; }
+    .tool-icon.gray::after { background: #8a8d99; }
+    .tool-icon .main-mark.long { width: 34px; font-size: 0.62rem; }
+
+    .converter-workspace {
+      display: grid;
+      gap: 18px;
+      width: min(100%, 1080px);
+      margin: 18px auto 0;
+      scroll-margin-top: 96px;
+    }
+
+    .converter-panel {
+      display: none;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      padding: 0;
+      overflow: hidden;
+      box-shadow: 0 16px 42px rgba(32, 33, 40, 0.1);
+    }
+
+    .converter-panel.active {
+      display: block;
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin: 0;
+      padding: 24px 26px;
+      border-bottom: 1px solid var(--border);
+      background:
+        linear-gradient(135deg, rgba(255, 232, 231, 0.78), rgba(255, 255, 255, 0.92) 54%),
+        #fff;
+    }
+
+    .panel-eyebrow {
+      margin: 0 0 6px;
+      color: var(--primary-dark);
+      font-size: 0.78rem;
+      font-weight: 950;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .panel-head h2 {
+      font-size: 1.7rem;
+      color: #26272f;
+    }
+
+    .panel-head p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      line-height: 1.5;
+      max-width: 720px;
+    }
+
+    .pdf-tools {
+      display: grid;
+      gap: 16px;
+      padding: 24px 26px 26px;
+    }
+
+    .pdf-tools > .convert-layout {
+      padding: 0;
+    }
+
+    .image-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .image-list:empty {
+      display: none;
+    }
+
+    .image-item {
+      display: grid;
+      grid-template-columns: 78px minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: center;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #fff;
+      padding: 10px;
+    }
+
+    .image-item img {
+      width: 78px;
+      height: 78px;
+      border-radius: 6px;
+      object-fit: cover;
+      background: #f1f1f5;
+      border: 1px solid #ededf2;
+    }
+
+    .image-item-title {
+      margin: 0;
+      color: #33333b;
+      font-weight: 950;
+      overflow-wrap: anywhere;
+    }
+
+    .image-item-meta {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 0.87rem;
+      font-weight: 750;
+    }
+
+    .image-item-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 7px;
+    }
+
+    .image-option-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .tool-form {
+      display: grid;
+      gap: 16px;
+      padding: 24px 26px 26px;
+    }
+
+    .converter-panel > .input-grid {
+      padding: 24px 26px 0;
+    }
+
+    .converter-panel > .output,
+    .converter-panel > .image-list,
+    .converter-panel > .actions {
+      margin-left: 26px;
+      margin-right: 26px;
+    }
+
+    .converter-panel > .actions:last-child {
+      margin-bottom: 26px;
+    }
+
+    .file-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .file-list:empty {
+      display: none;
+    }
+
+    .file-list-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #fafafd;
+      color: #33333b;
+      font-weight: 850;
+      overflow-wrap: anywhere;
+    }
+
+    .file-list-item span {
+      color: var(--muted);
+      flex: 0 0 auto;
+      font-size: 0.84rem;
+      font-weight: 800;
+    }
+
+    .input-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      align-items: end;
+    }
+
+    .convert-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(260px, 0.75fr);
+      gap: 18px;
+      align-items: stretch;
+      padding: 24px 26px 0;
+    }
+
+    .convert-upload {
+      min-width: 0;
+    }
+
+    .convert-options {
+      display: grid;
+      align-content: start;
+      gap: 14px;
+      min-width: 0;
+      padding: 16px;
+      border: 1px solid #e4e4ee;
+      border-radius: 8px;
+      background: #fafafd;
+    }
+
+    .convert-options .input-group {
+      margin-bottom: 0;
+    }
+
+    .convert-options .btn {
+      width: 100%;
+    }
+
+    .input-group { margin-bottom: 16px; min-width: 0; }
+
+    label {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+      color: #334155;
+      font-size: 0.92rem;
+      font-weight: 800;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      background: #ffffff;
+      color: var(--text);
+      padding: 13px 14px;
+      outline: none;
+      transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+      line-height: 1.55;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+      background: #ffffff;
+    }
+
+    input::placeholder, textarea::placeholder { color: #94a3b8; }
+
+    input[type="file"]:not(.visually-hidden) {
+      min-height: 54px;
+      padding: 10px;
+      border-style: dashed;
+      background: #fafafd;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    input[type="file"]:not(.visually-hidden)::file-selector-button {
+      border: 0;
+      border-radius: 8px;
+      margin-right: 12px;
+      padding: 10px 13px;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    input[type="file"]:not(.visually-hidden):hover {
+      border-color: var(--primary);
+      background: #fff8f7;
+    }
+
+    .input-wrap { position: relative; }
+
+    .prefix {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-weight: 900;
+      pointer-events: none;
+    }
+
+    .has-prefix { padding-left: 45px; }
+
+    .output {
+      margin-top: 16px;
+      background: var(--surface-soft);
+      border: 1px solid #e5e5ee;
+      border-left: 5px solid var(--primary);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      line-height: 1.6;
+      overflow-wrap: anywhere;
+    }
+
+    .placeholder { color: var(--muted); font-weight: 700; }
+    .error { color: var(--danger); font-weight: 800; }
+
+    .result-title {
+      color: var(--text);
+      font-size: 1.22rem;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      margin-bottom: 5px;
+    }
+
+    .result-text {
+      color: #475569;
+      font-style: italic;
+      margin-bottom: 14px;
+    }
+
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      border-bottom: 1px dashed #d7e2ef;
+      padding: 8px 0;
+    }
+
+    .result-row:last-of-type { border-bottom: 0; }
+    .result-row span { color: var(--muted); font-weight: 700; }
+    .result-row strong { text-align: right; }
+
+    .percent-result-input {
+      width: min(260px, 100%);
+      padding: 9px 11px;
+      border-radius: 8px;
+      text-align: right;
+      font-weight: 950;
+      color: #111827;
+      background: #ffffff;
+    }
+
+    .percent-total-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-top: 10px;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 8px;
+      background: var(--primary);
+      color: #fff;
+      padding: 12px 16px;
+      font-weight: 900;
+      cursor: pointer;
+      transition: transform 0.16s, box-shadow 0.16s, opacity 0.16s, background 0.16s;
+      box-shadow: 0 8px 18px rgba(229, 50, 45, 0.18);
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      min-height: 46px;
+      white-space: nowrap;
+    }
+
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 12px 24px rgba(229, 50, 45, 0.22); background: var(--primary-dark); }
+    .btn:active { transform: translateY(0); }
+    .btn:disabled { cursor: not-allowed; opacity: 0.55; transform: none; box-shadow: none; }
+
+    .btn-secondary {
+      background: #e8eef7;
+      color: #1e293b;
+      box-shadow: none;
+      border: 1px solid #d8e2f0;
+    }
+
+    .btn-secondary:hover { box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08); }
+
+    .btn-danger {
+      background: #fee2e2;
+      color: #991b1b;
+      box-shadow: none;
+      border: 1px solid #fecaca;
+    }
+
+    .btn-small {
+      min-height: 38px;
+      padding: 8px 11px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+    }
+
+    .btn-copy.success, .success {
+      background: var(--success) !important;
+      color: #fff !important;
+      border-color: var(--success) !important;
+    }
+
+    .mode-tabs {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      padding: 6px;
+      border: 1px solid var(--border);
+      background: #f8fbff;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    .mode-tab {
+      border: 0;
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-weight: 900;
+      color: #475569;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .mode-tab.active {
+      color: white;
+      background: var(--primary);
+      box-shadow: 0 8px 18px rgba(229, 50, 45, 0.16);
+    }
+
+    .mode-panel { display: none; }
+    .mode-panel.active { display: block; }
+
+    .paste-panel {
+      margin-bottom: 16px;
+      border: 1px solid var(--border);
+      background: #fafafd;
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .paste-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 12px;
+    }
+
+    .paste-title {
+      margin: 0;
+      font-weight: 950;
+      color: #0f172a;
+      letter-spacing: -0.015em;
+    }
+
+    .paste-desc {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.55;
+    }
+
+    .paste-desc code {
+      padding: 2px 6px;
+      border: 1px solid #dbe7f6;
+      border-radius: 7px;
+      background: #eef6ff;
+      color: #1e3a8a;
+      font-weight: 800;
+    }
+
+    .operator-default {
+      min-width: 150px;
+    }
+
+    .operator-default label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .operator-default select { padding: 10px 12px; border-radius: 12px; }
+
+    .paste-area {
+      min-height: 94px;
+      font-family: Consolas, "SFMono-Regular", Menlo, monospace;
+      line-height: 1.5;
+      white-space: pre;
+      overflow: auto;
+    }
+
+    .compact-actions { margin-top: 10px; }
+
+    .compact-output { margin-top: 14px; }
+
+    .calc-table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #ffffff;
+    }
+
+    .calc-table {
+      width: 100%;
+      min-width: 720px;
+      border-collapse: collapse;
+    }
+
+    .calc-table th,
+    .calc-table td {
+      padding: 10px;
+      border-bottom: 1px solid #e5edf7;
+      vertical-align: middle;
+      text-align: right;
+    }
+
+    .calc-table th {
+      background: #f1f7ff;
+      color: #334155;
+      font-size: 0.86rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      text-align: right;
+    }
+
+    .calc-table th:nth-child(2),
+    .calc-table td:nth-child(2),
+    .calc-table th:last-child,
+    .calc-table td:last-child { text-align: center; }
+
+    .calc-table tr:last-child td { border-bottom: 0; }
+    .calc-table input, .calc-table select { padding: 10px 11px; border-radius: 11px; }
+    .calc-table input { text-align: right; }
+    .calc-table .operator-cell { width: 92px; }
+    .calc-table .action-cell { width: 90px; }
+    .calc-result { font-weight: 950; white-space: nowrap; color: #0f172a; }
+    .calc-result-input,
+    .calc-total-input {
+      font-weight: 950;
+      color: #0f172a;
+      background: #f8fbff;
+    }
+    .calc-table tfoot td {
+      background: #f8fbff;
+      border-top: 2px solid #cbdcf1;
+      font-weight: 950;
+      color: #0f172a;
+    }
+    .calc-table tfoot td:first-child { text-align: right; }
+    #calcGrandTotal { color: #111827; font-size: 1.02rem; }
+
+
+    .calc-adjust-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin: 14px 0;
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: linear-gradient(180deg, #f8fbff, #ffffff);
+    }
+
+    .calc-adjust-grid .input-group {
+      margin-bottom: 0;
+    }
+
+    .calc-adjust-grid input {
+      font-weight: 900;
+      text-align: right;
+    }
+
+    .calc-table tfoot .discount-row td {
+      background: #fff7ed;
+      color: #9a3412;
+    }
+
+    .calc-table tfoot .after-discount-row td {
+      background: #f8fbff;
+    }
+
+    .calc-table tfoot .tax-row td {
+      background: #eff6ff;
+      color: #1d4ed8;
+    }
+
+    .calc-table tfoot .total-final-row td {
+      background: #ecfdf5;
+      color: #064e3b;
+      border-top: 2px solid #86efac;
+      font-size: 1.04rem;
+    }
+
+    .calc-table tfoot .total-final-row .calc-total-input {
+      border-color: #86efac;
+      background: #ffffff;
+      color: #064e3b;
+      font-weight: 1000;
+    }
+
+    .calc-table tfoot .total-final-row td:first-child,
+    .calc-table tfoot .total-final-row #calcGrandTotal {
+      font-weight: 1000;
+    }
+
+    .percent-inline {
+      color: inherit;
+      font-weight: 950;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+      padding-top: 2px;
+    }
+
+    .copy-box {
+      margin-top: 14px;
+      background: #f8fbff;
+      border: 1px dashed #bfd1ea;
+      border-radius: 18px;
+      padding: 14px;
+    }
+
+    .copy-box-title {
+      margin: 0 0 8px;
+      color: #334155;
+      font-weight: 900;
+    }
+
+    .copy-preview {
+      width: 100%;
+      min-height: 110px;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: white;
+      color: #334155;
+      font-family: Consolas, Monaco, monospace;
+      white-space: pre;
+      overflow: auto;
+    }
+
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .file-uploader {
+      display: grid;
+      grid-template-columns: 70px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 16px;
+      min-height: 126px;
+      width: 100%;
+      padding: 20px;
+      border: 2px dashed #c8c9d4;
+      border-radius: 8px;
+      background: #fafafd;
+      cursor: pointer;
+      transition: border-color 0.18s, transform 0.18s, background 0.18s, box-shadow 0.18s;
+      user-select: none;
+    }
+
+    .file-uploader:hover,
+    .file-uploader.drag-over,
+    .file-uploader:focus-visible {
+      border-color: var(--primary);
+      transform: translateY(-1px);
+      box-shadow: 0 10px 24px rgba(229, 50, 45, 0.1);
+      outline: none;
+      background: #fff7f6;
+    }
+
+    .file-uploader.has-file {
+      border-style: solid;
+      border-color: rgba(22, 163, 74, 0.6);
+      background: #f1fdf5;
+    }
+
+    .upload-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      color: white;
+      font-size: 1.9rem;
+      font-weight: 900;
+      background: var(--primary);
+      box-shadow: none;
+    }
+
+    .upload-title {
+      display: block;
+      font-size: 1.08rem;
+      font-weight: 950;
+      color: #0f172a;
+      word-break: break-word;
+    }
+
+    .upload-subtitle {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      line-height: 1.45;
+      font-size: 0.92rem;
+    }
+
+    .file-mini-info {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 10px;
+    }
+
+    .mini-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 9px;
+      border-radius: 999px;
+      color: var(--primary-dark);
+      background: var(--primary-soft);
+      font-size: 0.78rem;
+      font-weight: 900;
+    }
+
+    .upload-pill {
+      color: #fff;
+      background: var(--primary);
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-size: 0.86rem;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .warning-note {
+      border: 1px solid #fde68a;
+      background: #fffbeb;
+      color: #92400e;
+      padding: 13px 14px;
+      border-radius: 8px;
+      line-height: 1.55;
+      font-weight: 700;
+      font-size: 0.9rem;
+      margin-top: 2px;
+    }
+
+    .progress-wrap {
+      display: none;
+      margin-top: 16px;
+      padding: 13px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #fafafd;
+    }
+
+    .progress-bar {
+      height: 10px;
+      border-radius: 999px;
+      background: #f1d9d8;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0;
+      border-radius: 999px;
+      background: var(--primary);
+      transition: width 0.18s;
+    }
+
+    .progress-text {
+      margin-top: 8px;
+      color: var(--muted);
+      font-weight: 800;
+      font-size: 0.9rem;
+    }
+
+    .slide-viewer {
+      display: none;
+      margin-top: 18px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #ffffff;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .slide-viewer.show { display: block; }
+
+    .slide-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      background: #fafafd;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .slide-title {
+      font-weight: 950;
+      color: #0f172a;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .slide-counter {
+      color: var(--primary-dark);
+      background: var(--primary-soft);
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.86rem;
+      font-weight: 950;
+      white-space: nowrap;
+    }
+
+    .slide-stage {
+      display: grid;
+      place-items: center;
+      min-height: 360px;
+      max-height: 72vh;
+      padding: 18px;
+      background:
+        linear-gradient(45deg, #f8fafc 25%, transparent 25%),
+        linear-gradient(-45deg, #f8fafc 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #f8fafc 75%),
+        linear-gradient(-45deg, transparent 75%, #f8fafc 75%);
+      background-size: 24px 24px;
+      background-position: 0 0, 0 12px, 12px -12px, -12px 0;
+    }
+
+    .slide-stage img {
+      max-width: 100%;
+      max-height: calc(72vh - 36px);
+      object-fit: contain;
+      border-radius: 6px;
+      background: white;
+      box-shadow: 0 14px 34px rgba(15, 23, 42, 0.16);
+    }
+
+    .slide-meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 14px 16px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    .slide-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .thumb-strip {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding: 12px 16px 16px;
+      border-top: 1px solid var(--border);
+      background: #fbfdff;
+    }
+
+    .thumb-btn {
+      flex: 0 0 auto;
+      border: 2px solid transparent;
+      border-radius: 8px;
+      padding: 5px;
+      background: #fafafd;
+      cursor: pointer;
+    }
+
+    .thumb-btn.active { border-color: var(--primary); background: var(--primary-soft); }
+    .thumb-btn img { width: 58px; height: 78px; object-fit: cover; border-radius: 8px; display: block; background: white; }
+    .thumb-btn span { display: block; margin-top: 4px; color: #334155; font-size: 0.75rem; font-weight: 900; text-align: center; }
+
+    .footer-note {
+      margin: 22px auto 0;
+      text-align: center;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 0.9rem;
+      max-width: 850px;
+    }
+
+    @media (max-width: 980px) {
+      .topbar-inner { align-items: flex-start; flex-direction: column; }
+      .page-nav { justify-content: flex-start; }
+      .converter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .container { grid-template-columns: 1fr; }
+      .finance-stack { max-width: 100%; }
+      .input-grid { grid-template-columns: 1fr; }
+      .convert-layout { grid-template-columns: 1fr; }
+      .image-option-grid { grid-template-columns: 1fr; }
+      .calc-adjust-grid { grid-template-columns: 1fr; }
+      .card { padding: 22px; }
+      .file-uploader { grid-template-columns: 62px minmax(0, 1fr); }
+      .upload-pill { grid-column: 1 / -1; justify-self: stretch; text-align: center; }
+    }
+
+    @media (max-width: 640px) {
+      body { padding: 0 12px 34px; }
+      .topbar { margin: 0 -12px; padding: 12px; }
+      .brand { font-size: 1.08rem; }
+      .page-nav { display: grid; grid-template-columns: 1fr; width: 100%; }
+      .nav-tab { width: 100%; }
+      .hero { padding: 34px 0 22px; }
+      .converter-grid { grid-template-columns: 1fr; }
+      .converter-card { padding: 20px; }
+      .converter-panel { padding: 0; }
+      .converter-card { min-height: 190px; }
+      .panel-head { flex-direction: column; padding: 20px; }
+      .tool-form, .pdf-tools { padding: 20px; }
+      .converter-panel > .input-grid { padding: 20px 20px 0; }
+      .convert-layout { padding: 20px 20px 0; }
+      .convert-options { padding: 14px; }
+      .converter-panel > .output,
+      .converter-panel > .image-list,
+      .converter-panel > .actions {
+        margin-left: 20px;
+        margin-right: 20px;
+      }
+      .converter-panel > .actions:last-child { margin-bottom: 20px; }
+      .image-item { grid-template-columns: 64px minmax(0, 1fr); }
+      .image-item img { width: 64px; height: 64px; }
+      .image-item-actions { grid-column: 1 / -1; justify-content: stretch; }
+      .image-item-actions .btn { flex: 1 1 90px; }
+      .card { padding: 18px; border-radius: 8px; }
+      .card-header { gap: 12px; margin-bottom: 18px; }
+      .icon-box { width: 42px; height: 42px; border-radius: 8px; }
+      .hint { white-space: normal; text-align: right; }
+      .result-row { flex-direction: column; gap: 2px; }
+      .result-row strong { text-align: left; }
+      .actions, .slide-controls { flex-direction: column; }
+      .btn { width: 100%; white-space: normal; }
+      .image-item-actions .btn { width: auto; }
+      .mode-tabs { grid-template-columns: 1fr; }
+      .paste-head { flex-direction: column; }
+      .operator-default { width: 100%; }
+      .file-uploader { grid-template-columns: 1fr; justify-items: center; text-align: center; padding: 18px 14px; }
+      .file-mini-info { justify-content: center; }
+      .upload-pill { width: 100%; }
+      .slide-topbar, .slide-meta { align-items: stretch; flex-direction: column; }
+      .slide-stage { min-height: 260px; max-height: 65vh; padding: 12px; }
+      .slide-stage img { max-height: calc(65vh - 24px); }
+      .thumb-btn img { width: 48px; height: 66px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand" id="appBrand" aria-label="Konverter PDF dan Gambar">
+        <span class="brand-mark" id="brandMark">PDF</span>
+        <span id="brandText">All PDF Tools</span>
+      </div>
+      <nav class="page-nav" aria-label="Navigasi aplikasi">
+        <button type="button" class="nav-tab active" data-view-target="pdfView">Konverter PDF &amp; Gambar</button>
+        <button type="button" class="nav-tab" data-view-target="financeView">Tool Finansial</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="app-view active" id="pdfView">
+      <section class="hero">
+      <div class="badge">PDF Utility</div>
+      <h1>All PDF Tools Static</h1>
+      <p class="subtitle">
+        Fitur yang realistis tanpa API/server: merge, split, remove/extract pages, rotate, watermark, nomor halaman, PDF ke gambar, gambar ke PDF, dan konverter gambar. Semua proses jalan di browser.
+      </p>
+      </section>
+
+      <section class="converter-shell" aria-label="Konverter PDF dan gambar">
+        <div class="converter-grid" role="tablist" aria-label="Pilihan konverter">
+          <button type="button" class="converter-card active" id="toolMergePdf" data-tool-panel="panelMergePdf" role="tab" aria-selected="true">
+            <span class="tool-icon orange" aria-hidden="true">
+              <span class="from-mark">↘</span>
+              <span class="main-mark">PDF</span>
+            </span>
+            <span>
+              <span class="converter-title">Merge PDF</span>
+              <span class="converter-text">Gabungkan beberapa PDF menjadi satu file sesuai urutan upload.</span>
+              <span class="tool-tag">Aktif di browser</span>
+            </span>
+          </button>
+
+          <button type="button" class="converter-card" id="toolSplitPdf" data-tool-panel="panelSplitPdf" role="tab" aria-selected="false">
+            <span class="tool-icon orange" aria-hidden="true">
+              <span class="from-mark">↘</span>
+              <span class="main-mark">CUT</span>
+            </span>
+            <span>
+              <span class="converter-title">Split PDF</span>
+              <span class="converter-text">Pisahkan halaman PDF menjadi file baru, semua halaman atau range tertentu.</span>
+              <span class="tool-tag">Aktif di browser</span>
+            </span>
+          </button>
+
+          <button type="button" class="converter-card" id="toolRemovePages" data-tool-panel="panelRemovePages" role="tab" aria-selected="false">
+            <span class="tool-icon orange" aria-hidden="true">
+              <span class="from-mark">↘</span>
+              <span class="main-mark">DEL</span>
+            </span>
+            <span>
+              <span class="converter-title">Remove pages</span>
+              <span class="converter-text">Hapus halaman tertentu dari PDF, misalnya 2,4-6, lalu download PDF baru.</span>
+              <span class="tool-tag">Aktif di browser</span>
+            </span>
+          </button>
+
+          <button type="button" class="converter-card" id="toolExtractPages" data-tool-panel="panelExtractPages" role="tab" aria-selected="false">
+            <span class="tool-icon orange" aria-hidden="true">
+              <span class="from-mark">↘</span>
+              <span class="main-mark">GET</span>
+            </span>
+            <span>
+              <span class="converter-title">Extract pages</span>
+              <span class="converter-text">Ambil halaman tertentu dari PDF menjadi file PDF baru.</span>
+              <span class="tool-tag">Aktif di browser</span>
+            </span>
+          </button>
+
+          <button type="button" class="converter-card" id="toolPdfToPng" data-tool-panel="panelPdfToPng" role="tab" aria-selected="false">
+            <span class="tool-icon pdf-to-png" aria-hidden="true">
+              <span class="from-mark">↘</span>
+              <span class="main-mark">IMG</span>
+            </span>
+            <span>
+              <span class="converter-title">PDF ke PNG/JPG</span>
+              <span class="converter-text">Konversi setiap halaman PDF menjadi PNG atau JPG, lalu cek hasilnya satu per satu sebelum download.</span>
+              <span class="tool-tag">Aktif di browser</span>
+            </span>
+          </button>
+
+          <button type="button" class="converter-card" id="toolImageToPdf" data-tool-panel="panelImageToPdf" role="tab" aria-selected="false">
+            <span class="tool-icon image-to-pdf" aria-hidden="true">
+              <span class="from-mark">↘</span>
+              <span class="main-mark">PDF</span>
+            </span>
+            <span>
+              <span class="converter-title">PNG/JPG ke PDF</span>
+              <span class="converter-text">Gabungkan beberapa gambar menjadi satu PDF dengan urutan, ukuran halaman, dan margin yang bisa diatur.</span>
+              <span class="tool-tag">Aktif di browser</span>
+            </span>
+          </button>
+
+          <button type="button" class="converter-card" id="toolImageConverter" data-tool-panel="panelImageConverter" role="tab" aria-selected="false">
+            <span class="tool-icon green" aria-hidden="true">
+              <span class="from-mark">↘</span>
+              <span class="main-mark">IMG</span>
+            </span>
+            <span>
+              <span class="converter-title">Convert image</span>
+              <span class="converter-text">Ubah PNG, JPG, JPEG, atau WEBP ke format PNG/JPG/WEBP tanpa server.</span>
+              <span class="tool-tag">Aktif di browser</span>
+            </span>
+          </button>
+
+          <button type="button" class="converter-card" id="toolRotatePdf" data-tool-panel="panelRotatePdf" role="tab" aria-selected="false">
+            <span class="tool-icon purple" aria-hidden="true">
+              <span class="from-mark">↘</span>
+              <span class="main-mark">90</span>
+            </span>
+            <span>
+              <span class="converter-title">Rotate PDF</span>
+              <span class="converter-text">Putar semua halaman PDF ke 90, 180, atau 270 derajat.</span>
+              <span class="tool-tag">Aktif di browser</span>
+            </span>
+          </button>
+
+          <button type="button" class="converter-card" id="toolWatermarkPdf" data-tool-panel="panelWatermarkPdf" role="tab" aria-selected="false">
+            <span class="tool-icon blue" aria-hidden="true">
+              <span class="from-mark">↘</span>
+              <span class="main-mark long">WM</span>
+            </span>
+            <span>
+              <span class="converter-title">Watermark</span>
+              <span class="converter-text">Tambahkan watermark teks di tengah halaman PDF.</span>
+              <span class="tool-tag">Aktif di browser</span>
+            </span>
+          </button>
+
+          <button type="button" class="converter-card" id="toolPageNumbers" data-tool-panel="panelPageNumbers" role="tab" aria-selected="false">
+            <span class="tool-icon gray" aria-hidden="true">
+              <span class="from-mark">↘</span>
+              <span class="main-mark">123</span>
+            </span>
+            <span>
+              <span class="converter-title">Page numbers</span>
+              <span class="converter-text">Tambahkan nomor halaman di footer PDF secara otomatis.</span>
+              <span class="tool-tag">Aktif di browser</span>
+            </span>
+          </button>
+        </div>
+
+        <div class="converter-workspace">
+          <section class="converter-panel active" id="panelMergePdf" role="tabpanel" aria-labelledby="toolMergePdf">
+            <div class="panel-head">
+              <div>
+                <p class="panel-eyebrow">Organize PDF</p>
+                <h2>Merge PDF</h2>
+                <p>Pilih beberapa PDF. File akan digabung sesuai urutan yang tampil di daftar.</p>
+              </div>
+            </div>
+
+            <div class="tool-form">
+              <div class="input-group">
+                <label for="inputMergePdfs">
+                  File PDF
+                  <span class="hint">bisa pilih banyak</span>
+                </label>
+                <input type="file" id="inputMergePdfs" accept="application/pdf" multiple />
+                <div class="file-list" id="mergeFileList"></div>
+              </div>
+              <div id="mergeStatus" class="output" aria-live="polite">
+                <div class="placeholder">Pilih minimal dua file PDF untuk digabung.</div>
+              </div>
+              <div class="actions">
+                <button type="button" id="btnMergePdfs" class="btn" disabled>Gabungkan PDF</button>
+                <button type="button" id="btnClearMerge" class="btn btn-danger">Bersihkan</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="converter-panel" id="panelSplitPdf" role="tabpanel" aria-labelledby="toolSplitPdf">
+            <div class="panel-head">
+              <div>
+                <p class="panel-eyebrow">Organize PDF</p>
+                <h2>Split PDF</h2>
+                <p>Pisahkan semua halaman ke ZIP, atau ambil range halaman tertentu menjadi PDF baru.</p>
+              </div>
+            </div>
+
+            <div class="tool-form">
+              <div class="input-grid">
+                <div class="input-group">
+                  <label for="inputSplitPdf">
+                    File PDF
+                    <span class="hint">satu file</span>
+                  </label>
+                  <input type="file" id="inputSplitPdf" accept="application/pdf" />
+                </div>
+                <div class="input-group">
+                  <label for="splitRange">
+                    Range Halaman
+                    <span class="hint">contoh: 1-3,5</span>
+                  </label>
+                  <input type="text" id="splitRange" placeholder="1-3,5" autocomplete="off" />
+                </div>
+                <div class="input-group">
+                  <label>&nbsp;</label>
+                  <button type="button" id="btnSplitRange" class="btn" disabled>Buat PDF Range</button>
+                </div>
+              </div>
+              <div id="splitStatus" class="output" aria-live="polite">
+                <div class="placeholder">Pilih PDF, lalu isi range halaman atau pisahkan semua halaman ke ZIP.</div>
+              </div>
+              <div class="actions">
+                <button type="button" id="btnSplitAll" class="btn btn-secondary" disabled>Pisah Semua ke ZIP</button>
+                <button type="button" id="btnClearSplit" class="btn btn-danger">Bersihkan</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="converter-panel" id="panelRemovePages" role="tabpanel" aria-labelledby="toolRemovePages">
+            <div class="panel-head">
+              <div>
+                <p class="panel-eyebrow">Organize PDF</p>
+                <h2>Remove pages</h2>
+                <p>Hapus halaman yang tidak dibutuhkan. Format range mendukung angka tunggal dan rentang halaman.</p>
+              </div>
+            </div>
+
+            <div class="tool-form">
+              <div class="input-grid">
+                <div class="input-group">
+                  <label for="inputRemovePdf">
+                    File PDF
+                    <span class="hint">satu file</span>
+                  </label>
+                  <input type="file" id="inputRemovePdf" accept="application/pdf" />
+                </div>
+                <div class="input-group">
+                  <label for="removeRange">
+                    Halaman Dihapus
+                    <span class="hint">contoh: 2,4-6</span>
+                  </label>
+                  <input type="text" id="removeRange" placeholder="2,4-6" autocomplete="off" />
+                </div>
+                <div class="input-group">
+                  <label>&nbsp;</label>
+                  <button type="button" id="btnRemovePages" class="btn" disabled>Hapus Halaman</button>
+                </div>
+              </div>
+              <div id="removeStatus" class="output" aria-live="polite">
+                <div class="placeholder">Pilih PDF, lalu isi halaman yang mau dihapus.</div>
+              </div>
+            </div>
+          </section>
+
+          <section class="converter-panel" id="panelExtractPages" role="tabpanel" aria-labelledby="toolExtractPages">
+            <div class="panel-head">
+              <div>
+                <p class="panel-eyebrow">Organize PDF</p>
+                <h2>Extract pages</h2>
+                <p>Ambil halaman tertentu dari PDF menjadi file PDF baru. Cocok untuk menyimpan bagian penting saja.</p>
+              </div>
+            </div>
+
+            <div class="tool-form">
+              <div class="input-grid">
+                <div class="input-group">
+                  <label for="inputExtractPdf">
+                    File PDF
+                    <span class="hint">satu file</span>
+                  </label>
+                  <input type="file" id="inputExtractPdf" accept="application/pdf" />
+                </div>
+                <div class="input-group">
+                  <label for="extractRange">
+                    Halaman Diambil
+                    <span class="hint">contoh: 1-3,5</span>
+                  </label>
+                  <input type="text" id="extractRange" placeholder="1-3,5" autocomplete="off" />
+                </div>
+                <div class="input-group">
+                  <label>&nbsp;</label>
+                  <button type="button" id="btnExtractPages" class="btn" disabled>Ambil Halaman</button>
+                </div>
+              </div>
+              <div id="extractStatus" class="output" aria-live="polite">
+                <div class="placeholder">Pilih PDF, lalu isi halaman yang mau diambil.</div>
+              </div>
+            </div>
+          </section>
+
+          <section class="converter-panel" id="panelRotatePdf" role="tabpanel" aria-labelledby="toolRotatePdf">
+            <div class="panel-head">
+              <div>
+                <p class="panel-eyebrow">Edit PDF</p>
+                <h2>Rotate PDF</h2>
+                <p>Putar semua halaman PDF sekaligus, lalu download file baru.</p>
+              </div>
+            </div>
+
+            <div class="tool-form">
+              <div class="input-grid">
+                <div class="input-group">
+                  <label for="inputRotatePdf">
+                    File PDF
+                    <span class="hint">satu file</span>
+                  </label>
+                  <input type="file" id="inputRotatePdf" accept="application/pdf" />
+                </div>
+                <div class="input-group">
+                  <label for="rotateAngle">
+                    Derajat Putar
+                    <span class="hint">semua halaman</span>
+                  </label>
+                  <select id="rotateAngle">
+                    <option value="90" selected>90 derajat</option>
+                    <option value="180">180 derajat</option>
+                    <option value="270">270 derajat</option>
+                  </select>
+                </div>
+                <div class="input-group">
+                  <label>&nbsp;</label>
+                  <button type="button" id="btnRotatePdf" class="btn" disabled>Putar PDF</button>
+                </div>
+              </div>
+              <div id="rotateStatus" class="output" aria-live="polite">
+                <div class="placeholder">Pilih PDF dan derajat putar.</div>
+              </div>
+            </div>
+          </section>
+
+          <section class="converter-panel" id="panelWatermarkPdf" role="tabpanel" aria-labelledby="toolWatermarkPdf">
+            <div class="panel-head">
+              <div>
+                <p class="panel-eyebrow">Edit PDF</p>
+                <h2>Watermark PDF</h2>
+                <p>Tambahkan watermark teks transparan di tengah semua halaman.</p>
+              </div>
+            </div>
+
+            <div class="tool-form">
+              <div class="input-grid">
+                <div class="input-group">
+                  <label for="inputWatermarkPdf">
+                    File PDF
+                    <span class="hint">satu file</span>
+                  </label>
+                  <input type="file" id="inputWatermarkPdf" accept="application/pdf" />
+                </div>
+                <div class="input-group">
+                  <label for="watermarkText">
+                    Teks Watermark
+                    <span class="hint">contoh: DRAFT</span>
+                  </label>
+                  <input type="text" id="watermarkText" value="DRAFT" autocomplete="off" />
+                </div>
+                <div class="input-group">
+                  <label>&nbsp;</label>
+                  <button type="button" id="btnWatermarkPdf" class="btn" disabled>Tambah Watermark</button>
+                </div>
+              </div>
+              <div id="watermarkStatus" class="output" aria-live="polite">
+                <div class="placeholder">Pilih PDF dan isi teks watermark.</div>
+              </div>
+            </div>
+          </section>
+
+          <section class="converter-panel" id="panelPageNumbers" role="tabpanel" aria-labelledby="toolPageNumbers">
+            <div class="panel-head">
+              <div>
+                <p class="panel-eyebrow">Edit PDF</p>
+                <h2>Page numbers</h2>
+                <p>Tambahkan nomor halaman di footer PDF dengan format 1 / total.</p>
+              </div>
+            </div>
+
+            <div class="tool-form">
+              <div class="input-grid">
+                <div class="input-group">
+                  <label for="inputNumberPdf">
+                    File PDF
+                    <span class="hint">satu file</span>
+                  </label>
+                  <input type="file" id="inputNumberPdf" accept="application/pdf" />
+                </div>
+                <div class="input-group">
+                  <label for="pageNumberPosition">
+                    Posisi
+                    <span class="hint">footer</span>
+                  </label>
+                  <select id="pageNumberPosition">
+                    <option value="center" selected>Tengah bawah</option>
+                    <option value="right">Kanan bawah</option>
+                    <option value="left">Kiri bawah</option>
+                  </select>
+                </div>
+                <div class="input-group">
+                  <label>&nbsp;</label>
+                  <button type="button" id="btnAddPageNumbers" class="btn" disabled>Tambah Nomor</button>
+                </div>
+              </div>
+              <div id="numberStatus" class="output" aria-live="polite">
+                <div class="placeholder">Pilih PDF untuk menambahkan nomor halaman.</div>
+              </div>
+            </div>
+          </section>
+
+          <section class="converter-panel" id="panelPdfToPng" role="tabpanel" aria-labelledby="toolPdfToPng">
+            <div class="panel-head">
+              <div>
+                <p class="panel-eyebrow">Konverter file PDF</p>
+                <h2>PDF ke PNG/JPG</h2>
+                <p>Output ditampilkan slide by slide. Pilih PNG untuk kualitas lossless atau JPG untuk ukuran lebih ringan.</p>
+              </div>
+            </div>
+
+            <div class="pdf-tools">
+              <div class="convert-layout">
+                <div class="input-group convert-upload">
+                  <label for="inputPdf">
+                    File PDF
+                    <span class="hint">drag & drop atau pilih file</span>
+                  </label>
+                  <input class="visually-hidden" type="file" id="inputPdf" accept="application/pdf" />
+                  <label class="file-uploader" id="pdfDropzone" for="inputPdf" tabindex="0" role="button" aria-label="Pilih atau jatuhkan file PDF">
+                    <span class="upload-icon">↥</span>
+                    <span>
+                      <span class="upload-title" id="pdfFileName">Upload file PDF</span>
+                      <span class="upload-subtitle" id="pdfFileDesc">Klik area ini atau jatuhkan file PDF di sini. Aman untuk HP dan desktop.</span>
+                      <span class="file-mini-info" id="pdfFileInfo">
+                        <span class="mini-chip">Format: PDF</span>
+                        <span class="mini-chip">Output: PNG/JPG per slide</span>
+                      </span>
+                    </span>
+                    <span class="upload-pill" id="pdfUploadPill">Pilih File</span>
+                  </label>
+                </div>
+
+                <div class="convert-options">
+                  <div class="input-group">
+                    <label for="inputScale">
+                      Kualitas render
+                      <span class="hint">2x biasanya pas</span>
+                    </label>
+                    <select id="inputScale">
+                      <option value="1">Standar 1x</option>
+                      <option value="1.5">Jelas 1.5x</option>
+                      <option value="2" selected>HD 2x</option>
+                      <option value="3">Super HD 3x</option>
+                    </select>
+                  </div>
+
+                  <div class="input-group">
+                    <label for="outputImageFormat">
+                      Format Output
+                      <span class="hint">PNG/JPG</span>
+                    </label>
+                    <select id="outputImageFormat">
+                      <option value="png" selected>PNG</option>
+                      <option value="jpg">JPG</option>
+                    </select>
+                  </div>
+                  <button type="button" id="btnConvertPdf" class="btn">Konversi PDF</button>
+                </div>
+              </div>
+
+              <div class="warning-note">
+                Konversi berjalan di browser. File PDF tetap diproses di perangkat kamu. Library PDF dimuat dari CDN, jadi fitur ini butuh koneksi internet.
+              </div>
+
+              <div id="pdfStatus" class="output" aria-live="polite">
+                <div class="placeholder">Pilih file PDF, lalu klik Konversi PDF.</div>
+              </div>
+
+              <div class="progress-wrap" id="progressWrap">
+                <div class="progress-bar">
+                  <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-text" id="progressText">Menunggu proses...</div>
+              </div>
+
+              <div class="actions">
+                <button type="button" id="btnDownloadCurrent" class="btn btn-secondary" disabled>Download Slide Ini</button>
+                <button type="button" id="btnDownloadZip" class="btn btn-secondary" disabled>Download Semua PNG (.zip)</button>
+                <button type="button" id="btnClearPdf" class="btn btn-danger">Bersihkan Hasil</button>
+              </div>
+
+              <div class="slide-viewer" id="slideViewer" aria-live="polite">
+                <div class="slide-topbar">
+                  <div class="slide-title" id="slideTitle">Preview slide</div>
+                  <div class="slide-counter" id="slideCounter">0 / 0</div>
+                </div>
+                <div class="slide-stage">
+                  <img id="slideImage" alt="Preview hasil PNG" />
+                </div>
+                <div class="slide-meta">
+                  <span id="slideMetaText">Belum ada slide.</span>
+                  <div class="slide-controls">
+                    <button type="button" id="btnPrevSlide" class="btn btn-secondary btn-small">Sebelumnya</button>
+                    <button type="button" id="btnNextSlide" class="btn btn-secondary btn-small">Berikutnya</button>
+                  </div>
+                </div>
+                <div class="thumb-strip" id="thumbStrip" aria-label="Thumbnail halaman PDF"></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="converter-panel" id="panelImageToPdf" role="tabpanel" aria-labelledby="toolImageToPdf">
+            <div class="panel-head">
+              <div>
+                <p class="panel-eyebrow">Konverter gambar</p>
+                <h2>PNG/JPG ke PDF</h2>
+                <p>Upload beberapa gambar, atur urutan, lalu download sebagai satu file PDF.</p>
+              </div>
+            </div>
+
+            <div class="convert-layout">
+              <div class="input-group convert-upload">
+                <label for="inputImages">
+                  File Gambar
+                  <span class="hint">PNG atau JPG</span>
+                </label>
+                <input class="visually-hidden" type="file" id="inputImages" accept="image/png,image/jpeg" multiple />
+                <label class="file-uploader" id="imageDropzone" for="inputImages" tabindex="0" role="button" aria-label="Pilih atau jatuhkan file PNG dan JPG">
+                  <span class="upload-icon">▧</span>
+                  <span>
+                    <span class="upload-title" id="imageFileName">Upload gambar</span>
+                    <span class="upload-subtitle" id="imageFileDesc">Klik area ini atau jatuhkan beberapa PNG/JPG di sini.</span>
+                    <span class="file-mini-info" id="imageFileInfo">
+                      <span class="mini-chip">Format: PNG/JPG</span>
+                      <span class="mini-chip">Output: PDF</span>
+                    </span>
+                  </span>
+                  <span class="upload-pill" id="imageUploadPill">Pilih Gambar</span>
+                </label>
+              </div>
+
+              <div class="convert-options">
+                <div class="input-group">
+                  <label for="imagePageSize">
+                    Ukuran Halaman
+                    <span class="hint">default auto</span>
+                  </label>
+                  <select id="imagePageSize">
+                    <option value="auto" selected>Auto per gambar</option>
+                    <option value="a4-portrait">A4 Portrait</option>
+                    <option value="a4-landscape">A4 Landscape</option>
+                  </select>
+                </div>
+
+                <div class="input-group">
+                  <label for="imageMargin">
+                    Margin
+                    <span class="hint">kecil default</span>
+                  </label>
+                  <select id="imageMargin">
+                    <option value="0">Tanpa margin</option>
+                    <option value="20" selected>Kecil</option>
+                    <option value="42">Sedang</option>
+                  </select>
+                </div>
+
+                <button type="button" id="btnCreateImagePdf" class="btn" disabled>Buat PDF</button>
+              </div>
+            </div>
+
+            <div id="imageStatus" class="output" aria-live="polite">
+              <div class="placeholder">Pilih gambar PNG/JPG untuk mulai membuat PDF.</div>
+            </div>
+
+            <div class="image-list" id="imageList" aria-label="Daftar gambar yang akan dikonversi"></div>
+
+            <div class="actions">
+              <button type="button" id="btnClearImages" class="btn btn-danger">Bersihkan Gambar</button>
+            </div>
+          </section>
+
+          <section class="converter-panel" id="panelImageConverter" role="tabpanel" aria-labelledby="toolImageConverter">
+            <div class="panel-head">
+              <div>
+                <p class="panel-eyebrow">Konverter gambar</p>
+                <h2>Convert image</h2>
+                <p>Ubah gambar PNG/JPG/WEBP ke PNG, JPG, atau WEBP. Banyak file akan otomatis masuk ZIP.</p>
+              </div>
+            </div>
+
+            <div class="tool-form">
+              <div class="input-grid">
+                <div class="input-group">
+                  <label for="inputImageConvert">
+                    File Gambar
+                    <span class="hint">bisa pilih banyak</span>
+                  </label>
+                  <input type="file" id="inputImageConvert" accept="image/png,image/jpeg,image/webp" multiple />
+                  <div class="file-list" id="imageConvertList"></div>
+                </div>
+                <div class="input-group">
+                  <label for="imageConvertFormat">
+                    Output
+                    <span class="hint">PNG/JPG/WEBP</span>
+                  </label>
+                  <select id="imageConvertFormat">
+                    <option value="png" selected>PNG</option>
+                    <option value="jpg">JPG</option>
+                    <option value="webp">WEBP</option>
+                  </select>
+                </div>
+                <div class="input-group">
+                  <label for="imageConvertQuality">
+                    Kualitas
+                    <span class="hint">untuk JPG/WEBP</span>
+                  </label>
+                  <select id="imageConvertQuality">
+                    <option value="0.75">Ringan 75%</option>
+                    <option value="0.9" selected>Jelas 90%</option>
+                    <option value="1">Maksimal 100%</option>
+                  </select>
+                </div>
+              </div>
+              <div id="imageConvertStatus" class="output" aria-live="polite">
+                <div class="placeholder">Pilih gambar untuk dikonversi.</div>
+              </div>
+              <div class="actions">
+                <button type="button" id="btnConvertImages" class="btn" disabled>Konversi Gambar</button>
+                <button type="button" id="btnClearImageConvert" class="btn btn-danger">Bersihkan</button>
+              </div>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <p class="footer-note">
+        Semua proses berjalan di browser tanpa API/server. Fitur berat seperti OCR, repair PDF, kompres serius, dan Word/PPT/Excel converter sengaja tidak dipaksakan.
+      </p>
+    </section>
+
+    <section class="app-view" id="financeView">
+      <section class="hero">
+        <div class="badge">Tool Finansial</div>
+        <h1>Aplikasi Tool Finansial</h1>
+        <p class="subtitle">
+          Konversi nominal rupiah dan kalkulator dua mode untuk Diskon, PPN, harga, qty, total, dan salin hasil ke Word.
+        </p>
+      </section>
+
+    <section class="container finance-stack" aria-label="Daftar tool finansial">
+      <article class="card">
+        <div class="card-header">
+          <div class="icon-box">Rp</div>
+          <div>
+            <h2>Konverter Angka ke Huruf</h2>
+            <p class="card-desc">Ubah nominal angka menjadi teks terbilang rupiah.</p>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="inputAngka">
+            Nominal Angka
+            <span class="hint">contoh: 3.894.000</span>
+          </label>
+          <div class="input-wrap">
+            <span class="prefix">Rp</span>
+            <input class="has-prefix" type="text" id="inputAngka" inputmode="text" placeholder="3.894.000" autocomplete="off" />
+          </div>
+        </div>
+
+        <div id="hasilKonversi" class="output" aria-live="polite">
+          <div class="placeholder">Hasil akan muncul di sini.</div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-header">
+          <div class="icon-box">Σ</div>
+          <div>
+            <h2>Kalkulator</h2>
+            <p class="card-desc">Mode persen untuk Diskon (-) dan PPN (+), mode kolom untuk harga × qty, jumlah editable, total, dan salin ke Word.</p>
+          </div>
+        </div>
+
+        <div class="mode-tabs" role="tablist" aria-label="Mode kalkulator">
+          <button type="button" class="mode-tab active" id="tabPersen" data-mode="persen">Mode Persen</button>
+          <button type="button" class="mode-tab" id="tabKolom" data-mode="kolom">Mode Kolom</button>
+        </div>
+
+        <div class="mode-panel active" id="panelPersen">
+          <div class="input-group">
+            <label for="inputNilai">
+              Nilai Dasar
+              <span class="hint">contoh: 185.000</span>
+            </label>
+            <div class="input-wrap">
+              <span class="prefix">Rp</span>
+              <input class="has-prefix" type="text" id="inputNilai" inputmode="numeric" placeholder="185.000" autocomplete="off" />
+            </div>
+          </div>
+
+          <div class="calc-adjust-grid" aria-label="Pengaturan Diskon dan PPN">
+            <div class="input-group">
+              <label for="inputDiskon">
+                Diskon (-)
+                <span class="hint">contoh: 5</span>
+              </label>
+              <input type="text" id="inputDiskon" inputmode="decimal" value="0" placeholder="0" autocomplete="off" />
+            </div>
+            <div class="input-group">
+              <label for="inputPpn">
+                PPN (+)
+                <span class="hint">contoh: 11</span>
+              </label>
+              <input type="text" id="inputPpn" inputmode="decimal" value="0" placeholder="0" autocomplete="off" />
+            </div>
+          </div>
+
+          <div id="hasilPersen" class="output" aria-live="polite">
+            <div class="placeholder">Masukkan nilai dasar dan persentase.</div>
+          </div>
+        </div>
+
+        <div class="mode-panel" id="panelKolom">
+          <div class="paste-panel">
+            <div class="paste-head">
+              <div>
+                <p class="paste-title">Tempel data Harga & Qty</p>
+                <p class="paste-desc">Paste dari Excel/Word dengan format dua kolom: <b>Harga</b> lalu <b>Qty</b>. Contoh: <code>2.272&nbsp;&nbsp;1200 Biji</code>.</p>
+              </div>
+              <div class="operator-default">
+                <label for="defaultOperator">Operasi default</label>
+                <select id="defaultOperator" aria-label="Operasi default untuk data yang ditempel">
+                  <option value="+">+</option>
+                  <option value="-">−</option>
+                  <option value="*" selected>×</option>
+                  <option value="/">÷</option>
+                </select>
+              </div>
+            </div>
+            <textarea id="pasteKolom" class="paste-area" placeholder="Tempel di sini, contoh:
+2.272	1200 Biji
+2.272	1000 Biji
+2.272	1000 Biji"></textarea>
+            <div class="actions compact-actions">
+              <button type="button" id="btnImportPaste" class="btn">Masukkan ke Tabel</button>
+              <button type="button" id="btnPasteSample" class="btn btn-secondary">Isi Contoh</button>
+            </div>
+          </div>
+
+          <div class="calc-table-wrap">
+            <table class="calc-table" aria-label="Kalkulator kolom harga dan qty">
+              <thead>
+                <tr>
+                  <th>Harga (Rp)</th>
+                  <th>Operasi</th>
+                  <th>Qty</th>
+                  <th>Jumlah (Rp)</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="calcRows"></tbody>
+              <tfoot>
+                <tr class="summary-row total-final-row">
+                  <td colspan="3">Total</td>
+                  <td><input type="text" id="calcGrandTotal" class="calc-total-input" inputmode="decimal" value="0" aria-label="Total rupiah yang bisa diedit"></td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <div class="actions">
+            <button type="button" id="btnAddRow" class="btn btn-secondary">Tambah Baris</button>
+            <button type="button" id="btnCalcRows" class="btn">Hitung Semua</button>
+            <button type="button" id="btnCopyAmounts" class="btn btn-secondary">Salin Jumlah Saja</button>
+            <button type="button" id="btnCopyTable" class="btn btn-secondary">Salin Tabel ke Word</button>
+            <button type="button" id="btnClearRows" class="btn btn-danger">Bersihkan</button>
+          </div>
+
+          <div id="kolomSummary" class="output compact-output" aria-live="polite">
+            <div class="placeholder">Paste harga dan qty, lalu klik Masukkan ke Tabel atau Hitung Semua.</div>
+          </div>
+
+          <div class="copy-box">
+            <p class="copy-box-title">Preview data yang akan disalin ke Word</p>
+            <textarea id="copyPreview" class="copy-preview" readonly placeholder="Hasil tabel akan muncul di sini setelah dihitung."></textarea>
+          </div>
+        </div>
+      </article>
+
+    </section>
+
+    </section>
+  </main>
+
+  <script>
+    const navTabs = [...document.querySelectorAll("[data-view-target]")];
+    const appViews = [...document.querySelectorAll(".app-view")];
+    const converterCards = [...document.querySelectorAll("[data-tool-panel]")];
+    const converterPanels = [...document.querySelectorAll(".converter-panel")];
+    const appBrand = document.getElementById("appBrand");
+    const brandMark = document.getElementById("brandMark");
+    const brandText = document.getElementById("brandText");
+
+    const inputAngka = document.getElementById("inputAngka");
+    const hasilKonversi = document.getElementById("hasilKonversi");
+
+    const inputNilai = document.getElementById("inputNilai");
+    const inputDiskon = document.getElementById("inputDiskon");
+    const inputPpn = document.getElementById("inputPpn");
+    const hasilPersen = document.getElementById("hasilPersen");
+    const tabPersen = document.getElementById("tabPersen");
+    const tabKolom = document.getElementById("tabKolom");
+    const panelPersen = document.getElementById("panelPersen");
+    const panelKolom = document.getElementById("panelKolom");
+    const calcRows = document.getElementById("calcRows");
+    const pasteKolom = document.getElementById("pasteKolom");
+    const defaultOperator = document.getElementById("defaultOperator");
+    const btnImportPaste = document.getElementById("btnImportPaste");
+    const btnPasteSample = document.getElementById("btnPasteSample");
+    const btnAddRow = document.getElementById("btnAddRow");
+    const btnCalcRows = document.getElementById("btnCalcRows");
+    const btnCopyAmounts = document.getElementById("btnCopyAmounts");
+    const btnCopyTable = document.getElementById("btnCopyTable");
+    const btnClearRows = document.getElementById("btnClearRows");
+    const calcGrandTotal = document.getElementById("calcGrandTotal");
+    const kolomSummary = document.getElementById("kolomSummary");
+    const copyPreview = document.getElementById("copyPreview");
+
+    const inputMergePdfs = document.getElementById("inputMergePdfs");
+    const mergeFileList = document.getElementById("mergeFileList");
+    const mergeStatus = document.getElementById("mergeStatus");
+    const btnMergePdfs = document.getElementById("btnMergePdfs");
+    const btnClearMerge = document.getElementById("btnClearMerge");
+    const inputSplitPdf = document.getElementById("inputSplitPdf");
+    const splitRange = document.getElementById("splitRange");
+    const splitStatus = document.getElementById("splitStatus");
+    const btnSplitRange = document.getElementById("btnSplitRange");
+    const btnSplitAll = document.getElementById("btnSplitAll");
+    const btnClearSplit = document.getElementById("btnClearSplit");
+    const inputRemovePdf = document.getElementById("inputRemovePdf");
+    const removeRange = document.getElementById("removeRange");
+    const removeStatus = document.getElementById("removeStatus");
+    const btnRemovePages = document.getElementById("btnRemovePages");
+    const inputExtractPdf = document.getElementById("inputExtractPdf");
+    const extractRange = document.getElementById("extractRange");
+    const extractStatus = document.getElementById("extractStatus");
+    const btnExtractPages = document.getElementById("btnExtractPages");
+    const inputRotatePdf = document.getElementById("inputRotatePdf");
+    const rotateAngle = document.getElementById("rotateAngle");
+    const rotateStatus = document.getElementById("rotateStatus");
+    const btnRotatePdf = document.getElementById("btnRotatePdf");
+    const inputWatermarkPdf = document.getElementById("inputWatermarkPdf");
+    const watermarkText = document.getElementById("watermarkText");
+    const watermarkStatus = document.getElementById("watermarkStatus");
+    const btnWatermarkPdf = document.getElementById("btnWatermarkPdf");
+    const inputNumberPdf = document.getElementById("inputNumberPdf");
+    const pageNumberPosition = document.getElementById("pageNumberPosition");
+    const numberStatus = document.getElementById("numberStatus");
+    const btnAddPageNumbers = document.getElementById("btnAddPageNumbers");
+
+    const inputPdf = document.getElementById("inputPdf");
+    const pdfDropzone = document.getElementById("pdfDropzone");
+    const pdfFileName = document.getElementById("pdfFileName");
+    const pdfFileDesc = document.getElementById("pdfFileDesc");
+    const pdfFileInfo = document.getElementById("pdfFileInfo");
+    const pdfUploadPill = document.getElementById("pdfUploadPill");
+    const inputScale = document.getElementById("inputScale");
+    const outputImageFormat = document.getElementById("outputImageFormat");
+    const btnConvertPdf = document.getElementById("btnConvertPdf");
+    const btnDownloadCurrent = document.getElementById("btnDownloadCurrent");
+    const btnDownloadZip = document.getElementById("btnDownloadZip");
+    const btnClearPdf = document.getElementById("btnClearPdf");
+    const pdfStatus = document.getElementById("pdfStatus");
+    const progressWrap = document.getElementById("progressWrap");
+    const progressFill = document.getElementById("progressFill");
+    const progressText = document.getElementById("progressText");
+    const slideViewer = document.getElementById("slideViewer");
+    const slideTitle = document.getElementById("slideTitle");
+    const slideCounter = document.getElementById("slideCounter");
+    const slideImage = document.getElementById("slideImage");
+    const slideMetaText = document.getElementById("slideMetaText");
+    const btnPrevSlide = document.getElementById("btnPrevSlide");
+    const btnNextSlide = document.getElementById("btnNextSlide");
+    const thumbStrip = document.getElementById("thumbStrip");
+
+    const inputImages = document.getElementById("inputImages");
+    const imageDropzone = document.getElementById("imageDropzone");
+    const imageFileName = document.getElementById("imageFileName");
+    const imageFileDesc = document.getElementById("imageFileDesc");
+    const imageFileInfo = document.getElementById("imageFileInfo");
+    const imageUploadPill = document.getElementById("imageUploadPill");
+    const imagePageSize = document.getElementById("imagePageSize");
+    const imageMargin = document.getElementById("imageMargin");
+    const imageStatus = document.getElementById("imageStatus");
+    const imageList = document.getElementById("imageList");
+    const btnCreateImagePdf = document.getElementById("btnCreateImagePdf");
+    const btnClearImages = document.getElementById("btnClearImages");
+    const inputImageConvert = document.getElementById("inputImageConvert");
+    const imageConvertFormat = document.getElementById("imageConvertFormat");
+    const imageConvertQuality = document.getElementById("imageConvertQuality");
+    const imageConvertList = document.getElementById("imageConvertList");
+    const imageConvertStatus = document.getElementById("imageConvertStatus");
+    const btnConvertImages = document.getElementById("btnConvertImages");
+    const btnClearImageConvert = document.getElementById("btnClearImageConvert");
+
+    let generatedPngs = [];
+    let currentSlideIndex = 0;
+    let imagePdfItems = [];
+    let mergePdfFiles = [];
+    let imageConvertFiles = [];
+
+    if (window.pdfjsLib) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+    }
+
+    function setAppView(viewId) {
+      const isFinance = viewId === "financeView";
+      brandMark.textContent = isFinance ? "Rp" : "PDF";
+      brandText.textContent = isFinance ? "Tool Finansial" : "Konverter PDF";
+      appBrand.setAttribute("aria-label", isFinance ? "Tool Finansial" : "Konverter PDF dan Gambar");
+      appViews.forEach((view) => view.classList.toggle("active", view.id === viewId));
+      navTabs.forEach((tab) => {
+        const isActive = tab.dataset.viewTarget === viewId;
+        tab.classList.toggle("active", isActive);
+        tab.setAttribute("aria-current", isActive ? "page" : "false");
+      });
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function setConverterPanel(panelId, sourceCard = null) {
+      converterCards.forEach((card) => {
+        const isActive = sourceCard ? card === sourceCard : card.dataset.toolPanel === panelId;
+        card.classList.toggle("active", isActive);
+        card.setAttribute("aria-selected", String(isActive));
+      });
+      converterPanels.forEach((panel) => {
+        panel.classList.toggle("active", panel.id === panelId);
+      });
+      if (sourceCard) {
+        document.querySelector(".converter-workspace").scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+
+    function hanyaDigit(value) {
+      return String(value || "").replace(/[^0-9]/g, "");
+    }
+
+    function hanyaDigitSebelumKoma(value) {
+      const raw = String(value || "").trim();
+      if (raw.includes(",")) return hanyaDigit(raw.split(",")[0]);
+
+      const dottedParts = raw.split(".");
+      if (dottedParts.length > 2) {
+        const lastPart = dottedParts[dottedParts.length - 1];
+        if (/^\d{1,2}$/.test(lastPart)) {
+          return hanyaDigit(dottedParts.slice(0, -1).join("."));
+        }
+      }
+
+      return hanyaDigit(raw);
+    }
+
+    function parseAngkaIndonesia(value) {
+      const cleaned = String(value || "")
+        .replace(/\s/g, "")
+        .replace(/\./g, "")
+        .replace(/,/g, ".")
+        .replace(/[^0-9.-]/g, "");
+      if (cleaned === "" || cleaned === "-" || cleaned === ".") return NaN;
+      return Number(cleaned);
+    }
+
+    function formatRupiah(value) {
+      const number = Number(value || 0);
+      return new Intl.NumberFormat("id-ID", { maximumFractionDigits: 0 }).format(number);
+    }
+
+    function formatNumber(value) {
+      if (!Number.isFinite(value)) return "";
+      return new Intl.NumberFormat("id-ID", { maximumFractionDigits: 8 }).format(value);
+    }
+
+    function formatUangBulat(value) {
+      const number = Number(value || 0);
+      return formatRupiah(Math.trunc(number));
+    }
+
+    function parsePersentase(value) {
+      const cleaned = String(value || "")
+        .replace(/,/g, ".")
+        .replace(/[^0-9.-]/g, "");
+      if (cleaned === "" || cleaned === "-" || cleaned === ".") return 0;
+      const number = Number(cleaned);
+      return Number.isFinite(number) ? number : 0;
+    }
+
+    function formatPersenLabel(value) {
+      return `${formatNumber(value)}%`;
+    }
+
+    function formatInputRupiah(input) {
+      const digits = hanyaDigit(input.value);
+      input.value = digits ? formatRupiah(digits) : "";
+    }
+
+    function formatInputRupiahTanpaDesimal(input) {
+      const digits = hanyaDigitSebelumKoma(input.value);
+      input.value = digits ? formatRupiah(digits) : "";
+    }
+
+    function normalizeRupiahText(value) {
+      const number = parseAngkaIndonesia(value);
+      if (!Number.isFinite(number)) return String(value || "");
+      return formatNumber(number);
+    }
+
+    function terbilangRatusan(n) {
+      const huruf = ["", "satu", "dua", "tiga", "empat", "lima", "enam", "tujuh", "delapan", "sembilan", "sepuluh", "sebelas"];
+      n = Number(n);
+      if (n < 12) return huruf[n];
+      if (n < 20) return `${huruf[n - 10]} belas`;
+      if (n < 100) return `${huruf[Math.floor(n / 10)]} puluh ${terbilangRatusan(n % 10)}`.trim();
+      if (n < 200) return `seratus ${terbilangRatusan(n - 100)}`.trim();
+      return `${huruf[Math.floor(n / 100)]} ratus ${terbilangRatusan(n % 100)}`.trim();
+    }
+
+    function terbilangDariString(digits) {
+      digits = String(digits || "").replace(/^0+/, "");
+      if (!digits) return "nol";
+
+      const skala = ["", "ribu", "juta", "miliar", "triliun"];
+      const grup = [];
+      for (let i = digits.length; i > 0; i -= 3) {
+        grup.unshift(digits.slice(Math.max(0, i - 3), i));
+      }
+
+      if (grup.length > skala.length) return "";
+
+      const hasil = [];
+      grup.forEach((part, index) => {
+        const num = Number(part);
+        if (num === 0) return;
+        const scaleIndex = grup.length - 1 - index;
+        if (num === 1 && scaleIndex === 1) {
+          hasil.push("seribu");
+        } else {
+          hasil.push(`${terbilangRatusan(num)} ${skala[scaleIndex]}`.trim());
+        }
+      });
+      return hasil.join(" ").replace(/\s+/g, " ").trim();
+    }
+
+    function kapitalSetiapKata(text) {
+      return String(text || "")
+        .toLowerCase()
+        .replace(/\S+/g, (kata) => kata.charAt(0).toUpperCase() + kata.slice(1));
+    }
+
+    function escapeHtml(value) {
+      return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function renderPlaceholder(target, text) {
+      target.innerHTML = `<div class="placeholder">${escapeHtml(text)}</div>`;
+    }
+
+    function renderError(target, text) {
+      target.innerHTML = `<div class="error">${escapeHtml(text)}</div>`;
+    }
+
+    async function salinTeks(teks, tombol) {
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(teks);
+        } else {
+          const temp = document.createElement("textarea");
+          temp.value = teks;
+          temp.style.position = "fixed";
+          temp.style.opacity = "0";
+          document.body.appendChild(temp);
+          temp.select();
+          document.execCommand("copy");
+          document.body.removeChild(temp);
+        }
+        const awal = tombol.textContent;
+        tombol.textContent = "✓ Tersalin";
+        tombol.classList.add("success");
+        setTimeout(() => {
+          tombol.textContent = awal;
+          tombol.classList.remove("success");
+        }, 1500);
+      } catch (error) {
+        alert("Gagal menyalin. Salin manual dari hasil yang tampil.");
+      }
+    }
+
+    async function salinHtmlDanTeks(html, text, tombol) {
+      const teksAwal = tombol.textContent;
+
+      function sukses(label = "✓ Tersalin") {
+        tombol.textContent = label;
+        tombol.classList.add("success");
+        setTimeout(() => {
+          tombol.textContent = teksAwal;
+          tombol.classList.remove("success");
+        }, 1500);
+      }
+
+      try {
+        if (navigator.clipboard && window.ClipboardItem) {
+          const item = new ClipboardItem({
+            "text/html": new Blob([html], { type: "text/html" }),
+            "text/plain": new Blob([text], { type: "text/plain" })
+          });
+          await navigator.clipboard.write([item]);
+          sukses("✓ Tabel Tersalin");
+          return;
+        }
+      } catch (error) {
+        // Lanjut ke fallback execCommand di bawah.
+      }
+
+      try {
+        const temp = document.createElement("div");
+        temp.contentEditable = "true";
+        temp.style.position = "fixed";
+        temp.style.left = "-9999px";
+        temp.style.top = "0";
+        temp.innerHTML = html;
+        document.body.appendChild(temp);
+
+        const range = document.createRange();
+        range.selectNodeContents(temp);
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+        document.execCommand("copy");
+        selection.removeAllRanges();
+        temp.remove();
+        sukses("✓ Tabel Tersalin");
+      } catch (error) {
+        await salinTeks(text, tombol);
+      }
+    }
+
+    function konversi() {
+      const digits = hanyaDigitSebelumKoma(inputAngka.value);
+      if (!digits) {
+        renderPlaceholder(hasilKonversi, "Hasil akan muncul di sini.");
+        return;
+      }
+
+      const teks = terbilangDariString(digits);
+      if (!teks) {
+        renderError(hasilKonversi, "Nominal terlalu besar. Pakai maksimal triliun agar hasil tetap aman dibaca.");
+        return;
+      }
+
+      const format = formatRupiah(digits);
+      const teksKapital = `${kapitalSetiapKata(teks)} Rupiah`;
+      hasilKonversi.innerHTML = `
+        <div class="result-title">Rp ${format}</div>
+        <div class="result-text">${escapeHtml(teksKapital)}</div>
+        <button type="button" class="btn btn-copy" data-copy="${escapeHtml(teksKapital)}">Salin Teks</button>
+      `;
+    }
+
+    function formatInputAngkaBertitik(input) {
+      const digits = hanyaDigit(input.value);
+      input.value = digits ? formatRupiah(digits) : "";
+    }
+
+    function getPercentCopyValue(input) {
+      return String(input ? input.value : "").replace(/^Rp\s*/i, "").trim();
+    }
+
+    function buildPercentCopy(mode) {
+      if (mode === "percent-total") {
+        return getPercentCopyValue(hasilPersen.querySelector('[data-percent-field="total"]'));
+      }
+      if (mode === "percent-all") {
+        return [...hasilPersen.querySelectorAll('[data-percent-copy="true"]')]
+          .map(getPercentCopyValue)
+          .filter(Boolean)
+          .join("\n");
+      }
+      return "";
+    }
+
+    function hitungPersen() {
+      const nilaiDigits = hanyaDigit(inputNilai.value);
+      const diskonPersen = parsePersentase(inputDiskon.value);
+      const ppnPersen = parsePersentase(inputPpn.value);
+
+      if (!nilaiDigits) {
+        renderPlaceholder(hasilPersen, "Masukkan nilai dasar, lalu isi Diskon dan/atau PPN.");
+        return;
+      }
+
+      const nilaiDasar = Number(nilaiDigits);
+      const diskon = nilaiDasar * (diskonPersen / 100);
+      const setelahDiskon = nilaiDasar - diskon;
+      const ppn = setelahDiskon * (ppnPersen / 100);
+      const total = setelahDiskon + ppn;
+
+      const diskonHtml = diskonPersen > 0
+        ? `
+          <div class="result-row">
+            <span>Diskon (-${formatPersenLabel(diskonPersen)})</span>
+            <input type="text" class="percent-result-input" data-percent-copy="true" inputmode="numeric" value="${formatUangBulat(diskon)}" aria-label="Nilai diskon yang bisa diedit">
+          </div>
+          <div class="result-row">
+            <span>Setelah diskon</span>
+            <input type="text" class="percent-result-input" data-percent-copy="true" inputmode="numeric" value="${formatUangBulat(setelahDiskon)}" aria-label="Nilai setelah diskon yang bisa diedit">
+          </div>
+        `
+        : "";
+      const ppnHtml = ppnPersen > 0
+        ? `
+          <div class="result-row">
+            <span>PPN (+${formatPersenLabel(ppnPersen)})</span>
+            <input type="text" class="percent-result-input" data-percent-copy="true" inputmode="numeric" value="${formatUangBulat(ppn)}" aria-label="Nilai PPN yang bisa diedit">
+          </div>
+        `
+        : "";
+
+      hasilPersen.innerHTML = `
+        <div class="result-row">
+          <span>Nilai dasar</span>
+          <input type="text" class="percent-result-input" inputmode="numeric" value="${formatUangBulat(nilaiDasar)}" aria-label="Nilai dasar yang bisa diedit">
+        </div>
+        ${diskonHtml}
+        ${ppnHtml}
+        <div class="percent-total-row">
+          <div class="result-title">Total</div>
+          <input type="text" class="percent-result-input" data-percent-field="total" data-percent-copy="true" inputmode="numeric" value="${formatUangBulat(total)}" aria-label="Total yang bisa diedit">
+        </div>
+        <div class="actions">
+          <button type="button" class="btn btn-copy" data-copy-mode="percent-total">Salin Total</button>
+          <button type="button" class="btn btn-secondary btn-copy" data-copy-mode="percent-all">Salin Semua</button>
+        </div>
+      `;
+    }
+
+    function setMode(mode) {
+      const persenAktif = mode === "persen";
+      tabPersen.classList.toggle("active", persenAktif);
+      tabKolom.classList.toggle("active", !persenAktif);
+      panelPersen.classList.toggle("active", persenAktif);
+      panelKolom.classList.toggle("active", !persenAktif);
+    }
+
+    function addCalcRow(harga = "", op = "*", qty = "", jumlah = "") {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td><input type="text" class="calc-a" inputmode="decimal" placeholder="185.000" value="${escapeHtml(harga)}" aria-label="Harga rupiah"></td>
+        <td class="operator-cell">
+          <select class="calc-op" aria-label="Operasi">
+            <option value="+">+</option>
+            <option value="-">−</option>
+            <option value="*">×</option>
+            <option value="/">÷</option>
+          </select>
+        </td>
+        <td><input type="text" class="calc-b" inputmode="decimal" placeholder="60 Roll" value="${escapeHtml(qty)}" aria-label="Qty"></td>
+        <td><input type="text" class="calc-result-input" inputmode="decimal" placeholder="Otomatis" value="${escapeHtml(jumlah)}" aria-label="Jumlah rupiah yang bisa diedit"></td>
+        <td class="action-cell"><button type="button" class="btn btn-danger btn-small btn-delete-row">Hapus</button></td>
+      `;
+      row.querySelector(".calc-op").value = op;
+      if (harga) row.querySelector(".calc-a").value = normalizeRupiahText(harga);
+      if (jumlah) {
+        const resultInput = row.querySelector(".calc-result-input");
+        resultInput.value = normalizeRupiahText(jumlah);
+        resultInput.dataset.manual = "true";
+      }
+      calcRows.appendChild(row);
+      return row;
+    }
+
+    function normalisasiOperator(op) {
+      if (["+", "-", "*", "/"].includes(op)) return op;
+      return "*";
+    }
+
+    function ambilKolomDariBaris(line) {
+      const raw = String(line || "").trim();
+      if (!raw) return null;
+
+      let parts = raw.split("\t").map(part => part.trim()).filter(Boolean);
+      if (parts.length < 2) parts = raw.split(/ {2,}/).map(part => part.trim()).filter(Boolean);
+      if (parts.length < 2) parts = raw.split(/[;,]/).map(part => part.trim()).filter(Boolean);
+
+      if (parts.length >= 2) {
+        return { harga: parts[0], qty: parts.slice(1).join(" ") };
+      }
+
+      const match = raw.match(/^(.+?)\s+(\d+(?:[,.]\d+)?\s*\D*)$/);
+      if (match) return { harga: match[1].trim(), qty: match[2].trim() };
+
+      return { harga: raw, qty: "" };
+    }
+
+    function parsePasteRows(text) {
+      return String(text || "")
+        .split(/\r?\n/)
+        .map(ambilKolomDariBaris)
+        .filter(Boolean)
+        .filter(item => item.harga || item.qty);
+    }
+
+    function importKolomText(text) {
+      const rows = parsePasteRows(text);
+      if (!rows.length) {
+        renderError(kolomSummary, "Data paste belum terbaca. Minimal tempel harga dan qty dalam dua kolom.");
+        return null;
+      }
+
+      calcRows.innerHTML = "";
+      const op = normalisasiOperator(defaultOperator.value);
+      rows.forEach(item => addCalcRow(item.harga, op, item.qty));
+      return hitungSemuaBaris(true);
+    }
+
+    function hitungSatuBaris(row, forceRecalculate = false) {
+      const hargaText = row.querySelector(".calc-a").value;
+      const qtyText = row.querySelector(".calc-b").value;
+      const op = row.querySelector(".calc-op").value;
+      const harga = parseAngkaIndonesia(hargaText);
+      const qty = parseAngkaIndonesia(qtyText);
+      const resultInput = row.querySelector(".calc-result-input");
+
+      if (!Number.isFinite(harga) || !Number.isFinite(qty)) {
+        if (forceRecalculate) resultInput.value = "";
+        const manualValue = parseAngkaIndonesia(resultInput.value);
+        if (Number.isFinite(manualValue)) {
+          return { harga: 0, hargaText, op, qty: 0, qtyText, jumlah: manualValue };
+        }
+        return null;
+      }
+      if (op === "/" && qty === 0) {
+        resultInput.value = "";
+        resultInput.placeholder = "Tidak bisa ÷ 0";
+        return null;
+      }
+
+      let jumlahHitung = 0;
+      if (op === "+") jumlahHitung = harga + qty;
+      if (op === "-") jumlahHitung = harga - qty;
+      if (op === "*") jumlahHitung = harga * qty;
+      if (op === "/") jumlahHitung = harga / qty;
+
+      const isManual = resultInput.dataset.manual === "true";
+      if (forceRecalculate || !isManual || !resultInput.value.trim()) {
+        resultInput.value = formatNumber(jumlahHitung);
+        resultInput.dataset.manual = "false";
+      }
+
+      const jumlahManual = parseAngkaIndonesia(resultInput.value);
+      const jumlah = Number.isFinite(jumlahManual) ? jumlahManual : jumlahHitung;
+      return { harga, hargaText, op, qty, qtyText, jumlah };
+    }
+
+    function simbolOperator(op) {
+      return op === "*" ? "×" : op === "/" ? "÷" : op === "-" ? "−" : "+";
+    }
+
+    function hitungRingkasan(rowsData) {
+      const total = rowsData.reduce((sum, item) => sum + item.jumlah, 0);
+      return { total };
+    }
+
+    function updateRingkasanTable(summary, forceRecalculate = false) {
+      const data = summary || { total: 0 };
+      const manualTotal = calcGrandTotal.dataset.manual === "true";
+      const manualValue = parseAngkaIndonesia(calcGrandTotal.value);
+      if (summary && manualTotal && !forceRecalculate && Number.isFinite(manualValue)) {
+        return { ...data, total: manualValue, calculatedTotal: data.total, totalManual: true };
+      }
+      calcGrandTotal.value = formatNumber(data.total);
+      calcGrandTotal.dataset.manual = "false";
+      return { ...data, calculatedTotal: data.total, totalManual: false };
+    }
+
+    function buildSummaryLines(summary) {
+      return [["Total", "", formatNumber(summary.total)]];
+    }
+
+    function buildTabelCopy(rowsData, totalOverride = null) {
+      const lines = [];
+      const htmlRows = [];
+
+      rowsData.forEach((item) => {
+        const rowText = [
+          formatNumber(item.harga),
+          item.qtyText || formatNumber(item.qty),
+          formatNumber(item.jumlah)
+        ];
+        lines.push(rowText.join("	"));
+        htmlRows.push(`<tr>${rowText.map(v => `<td style="text-align:right;">${escapeHtml(v)}</td>`).join("")}</tr>`);
+      });
+
+      const summary = hitungRingkasan(rowsData);
+      if (Number.isFinite(totalOverride)) summary.total = totalOverride;
+      const totalText = formatNumber(summary.total);
+      lines.push(["Total", "", totalText].join("	"));
+      htmlRows.push(`<tr><td colspan="2" style="font-weight:800;text-align:right;">Total</td><td style="font-weight:800;text-align:right;">${escapeHtml(totalText)}</td></tr>`);
+
+      const text = lines.join("\n");
+      const html = `<table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;min-width:420px;">${htmlRows.join("")}</table>`;
+      return { text, html, ...summary };
+    }
+
+    function buildJumlahOnlyCopy(rowsData) {
+      const lines = [];
+      const htmlRows = [];
+
+      rowsData.forEach((item) => {
+        const jumlah = formatNumber(item.jumlah);
+        lines.push(jumlah);
+        htmlRows.push(`<tr><td style="text-align:right;">${escapeHtml(jumlah)}</td></tr>`);
+      });
+
+      return {
+        text: lines.join("\n"),
+        html: `<table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;min-width:220px;">${htmlRows.join("")}</table>`,
+        ...hitungRingkasan(rowsData)
+      };
+    }
+
+    function ambilDataKolomValid(forceRecalculate = false) {
+      const rowsData = [];
+      [...calcRows.children].forEach((row) => {
+        const result = hitungSatuBaris(row, forceRecalculate);
+        if (result) rowsData.push(result);
+      });
+      return rowsData;
+    }
+
+    function hitungSemuaBaris(forceRecalculate = false) {
+      const rowsData = ambilDataKolomValid(forceRecalculate);
+
+      if (!rowsData.length) {
+        updateRingkasanTable(null);
+        copyPreview.value = "Isi minimal satu baris harga dan qty yang valid dulu.";
+        renderPlaceholder(kolomSummary, "Belum ada baris valid. Paste data harga dan qty, atau isi tabel manual.");
+        return null;
+      }
+
+      const summary = updateRingkasanTable(hitungRingkasan(rowsData), forceRecalculate);
+      const table = buildTabelCopy(rowsData, summary.total);
+      copyPreview.value = table.text;
+      kolomSummary.innerHTML = `
+        <div class="result-row"><span>Baris valid</span><strong>${rowsData.length}</strong></div>
+        <div class="result-row"><span>Jumlah per baris</span><strong>Bisa diedit manual</strong></div>
+        <div class="result-title">Total: Rp ${formatNumber(summary.total)}</div>
+        <div class="result-text">Salin Tabel ke Word sekarang hanya menyalin data, tanpa header Harga/Qty/Jumlah.</div>
+      `;
+      return table;
+    }
+
+    function resetCalcRows() {
+      calcRows.innerHTML = "";
+      addCalcRow("", "*", "");
+      addCalcRow("", "*", "");
+      addCalcRow("", "*", "");
+      updateRingkasanTable(null);
+      pasteKolom.value = "";
+      copyPreview.value = "";
+      renderPlaceholder(kolomSummary, "Paste harga dan qty, lalu klik Masukkan ke Tabel atau Hitung Semua.");
+    }
+
+    function namaFileAman(name) {
+      return String(name || "dokumen")
+        .replace(/\.pdf$/i, "")
+        .replace(/[^a-z0-9_-]+/gi, "-")
+        .replace(/^-+|-+$/g, "") || "dokumen";
+    }
+
+    function formatUkuranFile(bytes) {
+      if (!Number.isFinite(bytes) || bytes <= 0) return "0 KB";
+      const units = ["B", "KB", "MB", "GB"];
+      const index = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+      const value = bytes / Math.pow(1024, index);
+      return `${value >= 10 ? value.toFixed(0) : value.toFixed(1)} ${units[index]}`;
+    }
+
+    function isPdfFile(file) {
+      return !!file && (file.type === "application/pdf" || String(file.name || "").toLowerCase().endsWith(".pdf"));
+    }
+
+    function renderFileList(target, files) {
+      target.innerHTML = [...(files || [])].map((file, index) => `
+        <div class="file-list-item">
+          <strong>${index + 1}. ${escapeHtml(file.name)}</strong>
+          <span>${formatUkuranFile(file.size)}</span>
+        </div>
+      `).join("");
+    }
+
+    function downloadBytes(bytes, filename, mimeType = "application/pdf") {
+      const blob = new Blob([bytes], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function downloadBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function getPdfLib() {
+      if (!window.PDFLib) return null;
+      return window.PDFLib;
+    }
+
+    async function loadPdfFromFile(file) {
+      const PDFLib = getPdfLib();
+      if (!PDFLib) throw new Error("PDF_LIB_MISSING");
+      return PDFLib.PDFDocument.load(await file.arrayBuffer());
+    }
+
+    function updateMergeUi() {
+      renderFileList(mergeFileList, mergePdfFiles);
+      btnMergePdfs.disabled = mergePdfFiles.length < 2;
+      if (!mergePdfFiles.length) {
+        renderPlaceholder(mergeStatus, "Pilih minimal dua file PDF untuk digabung.");
+      } else {
+        mergeStatus.innerHTML = `
+          <div class="result-title">${mergePdfFiles.length} PDF siap digabung</div>
+          <div class="result-text">Urutan file mengikuti daftar di atas.</div>
+        `;
+      }
+    }
+
+    async function gabungkanPdf() {
+      if (mergePdfFiles.length < 2) {
+        renderError(mergeStatus, "Pilih minimal dua file PDF.");
+        return;
+      }
+      const PDFLib = getPdfLib();
+      if (!PDFLib) {
+        renderError(mergeStatus, "Library PDF-lib gagal dimuat. Pastikan koneksi internet aktif, lalu refresh halaman.");
+        return;
+      }
+
+      btnMergePdfs.disabled = true;
+      const labelAwal = btnMergePdfs.textContent;
+      btnMergePdfs.textContent = "Menggabungkan...";
+      renderPlaceholder(mergeStatus, "Menggabungkan PDF...");
+
+      try {
+        const mergedPdf = await PDFLib.PDFDocument.create();
+        for (const file of mergePdfFiles) {
+          const sourcePdf = await loadPdfFromFile(file);
+          const copiedPages = await mergedPdf.copyPages(sourcePdf, sourcePdf.getPageIndices());
+          copiedPages.forEach((page) => mergedPdf.addPage(page));
+        }
+        const bytes = await mergedPdf.save();
+        downloadBytes(bytes, "merge-pdf.pdf");
+        mergeStatus.innerHTML = `
+          <div class="result-title">PDF berhasil digabung</div>
+          <div class="result-text">${mergePdfFiles.length} file PDF sudah menjadi satu file.</div>
+        `;
+      } catch (error) {
+        console.error(error);
+        renderError(mergeStatus, "Gagal menggabungkan PDF. Pastikan file tidak rusak atau tidak terproteksi password.");
+      } finally {
+        btnMergePdfs.textContent = labelAwal;
+        btnMergePdfs.disabled = mergePdfFiles.length < 2;
+      }
+    }
+
+    function parsePageRange(value, totalPages) {
+      const pages = new Set();
+      const chunks = String(value || "").split(",").map((item) => item.trim()).filter(Boolean);
+      if (!chunks.length) return [];
+      chunks.forEach((chunk) => {
+        const match = chunk.match(/^(\d+)(?:\s*-\s*(\d+))?$/);
+        if (!match) throw new Error("INVALID_RANGE");
+        let start = Number(match[1]);
+        let end = Number(match[2] || match[1]);
+        if (start > end) [start, end] = [end, start];
+        if (start < 1 || end > totalPages) throw new Error("OUT_OF_RANGE");
+        for (let page = start; page <= end; page++) pages.add(page - 1);
+      });
+      return [...pages].sort((a, b) => a - b);
+    }
+
+    async function splitPdfRange() {
+      const file = inputSplitPdf.files && inputSplitPdf.files[0];
+      if (!isPdfFile(file)) {
+        renderError(splitStatus, "Pilih file PDF dulu.");
+        return;
+      }
+
+      btnSplitRange.disabled = true;
+      const labelAwal = btnSplitRange.textContent;
+      btnSplitRange.textContent = "Membuat PDF...";
+      renderPlaceholder(splitStatus, "Membaca PDF dan range halaman...");
+
+      try {
+        const PDFLib = getPdfLib();
+        if (!PDFLib) throw new Error("PDF_LIB_MISSING");
+        const sourcePdf = await loadPdfFromFile(file);
+        const totalPages = sourcePdf.getPageCount();
+        const selectedPages = parsePageRange(splitRange.value, totalPages);
+        if (!selectedPages.length) throw new Error("INVALID_RANGE");
+
+        const newPdf = await PDFLib.PDFDocument.create();
+        const copiedPages = await newPdf.copyPages(sourcePdf, selectedPages);
+        copiedPages.forEach((page) => newPdf.addPage(page));
+        const bytes = await newPdf.save();
+        downloadBytes(bytes, `${namaFileAman(file.name)}-range.pdf`);
+        splitStatus.innerHTML = `
+          <div class="result-title">Range berhasil dibuat</div>
+          <div class="result-text">${selectedPages.length} halaman disimpan sebagai PDF baru.</div>
+        `;
+      } catch (error) {
+        console.error(error);
+        if (error.message === "PDF_LIB_MISSING") {
+          renderError(splitStatus, "Library PDF-lib gagal dimuat. Pastikan koneksi internet aktif, lalu refresh halaman.");
+        } else {
+          renderError(splitStatus, "Range tidak valid. Contoh format: 1-3,5. Pastikan halaman tidak melebihi jumlah halaman PDF.");
+        }
+      } finally {
+        btnSplitRange.textContent = labelAwal;
+        btnSplitRange.disabled = !isPdfFile(inputSplitPdf.files && inputSplitPdf.files[0]);
+      }
+    }
+
+    async function splitPdfSemuaHalaman() {
+      const file = inputSplitPdf.files && inputSplitPdf.files[0];
+      if (!isPdfFile(file)) {
+        renderError(splitStatus, "Pilih file PDF dulu.");
+        return;
+      }
+      if (!window.JSZip) {
+        renderError(splitStatus, "Library ZIP gagal dimuat. Pastikan koneksi internet aktif, lalu refresh halaman.");
+        return;
+      }
+
+      btnSplitAll.disabled = true;
+      const labelAwal = btnSplitAll.textContent;
+      btnSplitAll.textContent = "Membuat ZIP...";
+      renderPlaceholder(splitStatus, "Memisahkan semua halaman...");
+
+      try {
+        const PDFLib = getPdfLib();
+        if (!PDFLib) throw new Error("PDF_LIB_MISSING");
+        const sourcePdf = await loadPdfFromFile(file);
+        const totalPages = sourcePdf.getPageCount();
+        const zip = new JSZip();
+        const baseName = namaFileAman(file.name);
+
+        for (let index = 0; index < totalPages; index++) {
+          const singlePdf = await PDFLib.PDFDocument.create();
+          const [page] = await singlePdf.copyPages(sourcePdf, [index]);
+          singlePdf.addPage(page);
+          const bytes = await singlePdf.save();
+          zip.file(`${baseName}-halaman-${String(index + 1).padStart(2, "0")}.pdf`, bytes);
+        }
+
+        const blob = await zip.generateAsync({ type: "blob" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `${baseName}-split.zip`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+        splitStatus.innerHTML = `
+          <div class="result-title">PDF berhasil dipisah</div>
+          <div class="result-text">${totalPages} halaman sudah dibuat menjadi file PDF terpisah dalam ZIP.</div>
+        `;
+      } catch (error) {
+        console.error(error);
+        renderError(splitStatus, "Gagal memisahkan PDF. Pastikan file tidak rusak atau tidak terproteksi password.");
+      } finally {
+        btnSplitAll.textContent = labelAwal;
+        btnSplitAll.disabled = !isPdfFile(inputSplitPdf.files && inputSplitPdf.files[0]);
+      }
+    }
+
+
+    async function hapusHalamanPdf() {
+      const file = inputRemovePdf.files && inputRemovePdf.files[0];
+      if (!isPdfFile(file)) {
+        renderError(removeStatus, "Pilih file PDF dulu.");
+        return;
+      }
+
+      btnRemovePages.disabled = true;
+      const labelAwal = btnRemovePages.textContent;
+      btnRemovePages.textContent = "Menghapus...";
+      renderPlaceholder(removeStatus, "Membaca PDF dan menghapus halaman...");
+
+      try {
+        const PDFLib = getPdfLib();
+        if (!PDFLib) throw new Error("PDF_LIB_MISSING");
+        const sourcePdf = await loadPdfFromFile(file);
+        const totalPages = sourcePdf.getPageCount();
+        const removedPages = parsePageRange(removeRange.value, totalPages);
+        if (!removedPages.length) throw new Error("INVALID_RANGE");
+        if (removedPages.length >= totalPages) throw new Error("REMOVE_ALL");
+
+        const removedSet = new Set(removedPages);
+        const keepPages = sourcePdf.getPageIndices().filter((index) => !removedSet.has(index));
+        const newPdf = await PDFLib.PDFDocument.create();
+        const copiedPages = await newPdf.copyPages(sourcePdf, keepPages);
+        copiedPages.forEach((page) => newPdf.addPage(page));
+        const bytes = await newPdf.save();
+        downloadBytes(bytes, `${namaFileAman(file.name)}-hapus-halaman.pdf`);
+        removeStatus.innerHTML = `
+          <div class="result-title">Halaman berhasil dihapus</div>
+          <div class="result-text">${removedPages.length} halaman dihapus. Sisa ${keepPages.length} halaman disimpan sebagai PDF baru.</div>
+        `;
+      } catch (error) {
+        console.error(error);
+        if (error.message === "REMOVE_ALL") {
+          renderError(removeStatus, "Tidak bisa menghapus semua halaman. Sisakan minimal satu halaman.");
+        } else {
+          renderError(removeStatus, "Range tidak valid. Contoh format: 2,4-6. Pastikan halaman tidak melebihi jumlah halaman PDF.");
+        }
+      } finally {
+        btnRemovePages.textContent = labelAwal;
+        btnRemovePages.disabled = !isPdfFile(inputRemovePdf.files && inputRemovePdf.files[0]);
+      }
+    }
+
+    async function ekstrakHalamanPdf() {
+      const file = inputExtractPdf.files && inputExtractPdf.files[0];
+      if (!isPdfFile(file)) {
+        renderError(extractStatus, "Pilih file PDF dulu.");
+        return;
+      }
+
+      btnExtractPages.disabled = true;
+      const labelAwal = btnExtractPages.textContent;
+      btnExtractPages.textContent = "Mengambil...";
+      renderPlaceholder(extractStatus, "Membaca PDF dan mengambil halaman...");
+
+      try {
+        const PDFLib = getPdfLib();
+        if (!PDFLib) throw new Error("PDF_LIB_MISSING");
+        const sourcePdf = await loadPdfFromFile(file);
+        const totalPages = sourcePdf.getPageCount();
+        const selectedPages = parsePageRange(extractRange.value, totalPages);
+        if (!selectedPages.length) throw new Error("INVALID_RANGE");
+
+        const newPdf = await PDFLib.PDFDocument.create();
+        const copiedPages = await newPdf.copyPages(sourcePdf, selectedPages);
+        copiedPages.forEach((page) => newPdf.addPage(page));
+        const bytes = await newPdf.save();
+        downloadBytes(bytes, `${namaFileAman(file.name)}-extract.pdf`);
+        extractStatus.innerHTML = `
+          <div class="result-title">Halaman berhasil diambil</div>
+          <div class="result-text">${selectedPages.length} halaman disimpan sebagai PDF baru.</div>
+        `;
+      } catch (error) {
+        console.error(error);
+        renderError(extractStatus, "Range tidak valid. Contoh format: 1-3,5. Pastikan halaman tidak melebihi jumlah halaman PDF.");
+      } finally {
+        btnExtractPages.textContent = labelAwal;
+        btnExtractPages.disabled = !isPdfFile(inputExtractPdf.files && inputExtractPdf.files[0]);
+      }
+    }
+
+    async function putarPdf() {
+      const file = inputRotatePdf.files && inputRotatePdf.files[0];
+      if (!isPdfFile(file)) {
+        renderError(rotateStatus, "Pilih file PDF dulu.");
+        return;
+      }
+
+      btnRotatePdf.disabled = true;
+      const labelAwal = btnRotatePdf.textContent;
+      btnRotatePdf.textContent = "Memutar...";
+      renderPlaceholder(rotateStatus, "Memutar semua halaman PDF...");
+
+      try {
+        const PDFLib = getPdfLib();
+        if (!PDFLib) throw new Error("PDF_LIB_MISSING");
+        const pdfDoc = await loadPdfFromFile(file);
+        const angle = Number(rotateAngle.value || 90);
+        pdfDoc.getPages().forEach((page) => {
+          const currentAngle = page.getRotation().angle || 0;
+          page.setRotation(PDFLib.degrees((currentAngle + angle) % 360));
+        });
+        const bytes = await pdfDoc.save();
+        downloadBytes(bytes, `${namaFileAman(file.name)}-rotate.pdf`);
+        rotateStatus.innerHTML = `
+          <div class="result-title">PDF berhasil diputar</div>
+          <div class="result-text">Semua halaman diputar ${angle} derajat.</div>
+        `;
+      } catch (error) {
+        console.error(error);
+        renderError(rotateStatus, "Gagal memutar PDF. Pastikan file tidak rusak atau tidak terproteksi password.");
+      } finally {
+        btnRotatePdf.textContent = labelAwal;
+        btnRotatePdf.disabled = !isPdfFile(inputRotatePdf.files && inputRotatePdf.files[0]);
+      }
+    }
+
+    async function tambahWatermarkPdf() {
+      const file = inputWatermarkPdf.files && inputWatermarkPdf.files[0];
+      const text = watermarkText.value.trim();
+      if (!isPdfFile(file)) {
+        renderError(watermarkStatus, "Pilih file PDF dulu.");
+        return;
+      }
+      if (!text) {
+        renderError(watermarkStatus, "Isi teks watermark dulu.");
+        return;
+      }
+
+      btnWatermarkPdf.disabled = true;
+      const labelAwal = btnWatermarkPdf.textContent;
+      btnWatermarkPdf.textContent = "Menambahkan...";
+      renderPlaceholder(watermarkStatus, "Menambahkan watermark ke semua halaman...");
+
+      try {
+        const PDFLib = getPdfLib();
+        if (!PDFLib) throw new Error("PDF_LIB_MISSING");
+        const pdfDoc = await loadPdfFromFile(file);
+        const font = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
+        pdfDoc.getPages().forEach((page) => {
+          const { width, height } = page.getSize();
+          const fontSize = Math.max(26, Math.min(width, height) / 9);
+          const textWidth = font.widthOfTextAtSize(text, fontSize);
+          page.drawText(text, {
+            x: (width - textWidth) / 2,
+            y: height / 2,
+            size: fontSize,
+            font,
+            color: PDFLib.rgb(0.85, 0.12, 0.1),
+            rotate: PDFLib.degrees(-35),
+            opacity: 0.18
+          });
+        });
+        const bytes = await pdfDoc.save();
+        downloadBytes(bytes, `${namaFileAman(file.name)}-watermark.pdf`);
+        watermarkStatus.innerHTML = `
+          <div class="result-title">Watermark berhasil ditambahkan</div>
+          <div class="result-text">Teks "${escapeHtml(text)}" sudah masuk ke semua halaman.</div>
+        `;
+      } catch (error) {
+        console.error(error);
+        renderError(watermarkStatus, "Gagal menambahkan watermark. Pastikan file tidak rusak atau tidak terproteksi password.");
+      } finally {
+        btnWatermarkPdf.textContent = labelAwal;
+        btnWatermarkPdf.disabled = !isPdfFile(inputWatermarkPdf.files && inputWatermarkPdf.files[0]);
+      }
+    }
+
+    async function tambahNomorHalaman() {
+      const file = inputNumberPdf.files && inputNumberPdf.files[0];
+      if (!isPdfFile(file)) {
+        renderError(numberStatus, "Pilih file PDF dulu.");
+        return;
+      }
+
+      btnAddPageNumbers.disabled = true;
+      const labelAwal = btnAddPageNumbers.textContent;
+      btnAddPageNumbers.textContent = "Menambahkan...";
+      renderPlaceholder(numberStatus, "Menambahkan nomor halaman...");
+
+      try {
+        const PDFLib = getPdfLib();
+        if (!PDFLib) throw new Error("PDF_LIB_MISSING");
+        const pdfDoc = await loadPdfFromFile(file);
+        const font = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+        const pages = pdfDoc.getPages();
+        const total = pages.length;
+        pages.forEach((page, index) => {
+          const { width } = page.getSize();
+          const label = `${index + 1} / ${total}`;
+          const fontSize = 10;
+          const textWidth = font.widthOfTextAtSize(label, fontSize);
+          const position = pageNumberPosition.value;
+          const x = position === "left" ? 32 : position === "right" ? width - textWidth - 32 : (width - textWidth) / 2;
+          page.drawText(label, {
+            x,
+            y: 24,
+            size: fontSize,
+            font,
+            color: PDFLib.rgb(0.22, 0.22, 0.25)
+          });
+        });
+        const bytes = await pdfDoc.save();
+        downloadBytes(bytes, `${namaFileAman(file.name)}-nomor-halaman.pdf`);
+        numberStatus.innerHTML = `
+          <div class="result-title">Nomor halaman berhasil ditambahkan</div>
+          <div class="result-text">${total} halaman sudah diberi nomor.</div>
+        `;
+      } catch (error) {
+        console.error(error);
+        renderError(numberStatus, "Gagal menambahkan nomor halaman. Pastikan file tidak rusak atau tidak terproteksi password.");
+      } finally {
+        btnAddPageNumbers.textContent = labelAwal;
+        btnAddPageNumbers.disabled = !isPdfFile(inputNumberPdf.files && inputNumberPdf.files[0]);
+      }
+    }
+
+    function namaFileTanpaEkstensi(name) {
+      return String(name || "gambar")
+        .replace(/\.(png|jpe?g|pdf)$/i, "")
+        .replace(/[^a-z0-9_-]+/gi, "-")
+        .replace(/^-+|-+$/g, "") || "gambar";
+    }
+
+    function isAcceptedImage(file) {
+      if (!file) return false;
+      const name = String(file.name || "").toLowerCase();
+      return file.type === "image/png" || file.type === "image/jpeg" || /\.(png|jpe?g)$/.test(name);
+    }
+
+    function readImageFile(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error("Gagal membaca file gambar."));
+        reader.onload = () => {
+          const dataUrl = String(reader.result || "");
+          const image = new Image();
+          image.onload = () => resolve({
+            id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+            file,
+            name: file.name,
+            type: file.type === "image/png" || /\.png$/i.test(file.name) ? "PNG" : "JPEG",
+            size: file.size,
+            dataUrl,
+            width: image.naturalWidth || image.width,
+            height: image.naturalHeight || image.height
+          });
+          image.onerror = () => reject(new Error(`Gambar ${file.name} tidak bisa dibuka.`));
+          image.src = dataUrl;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function updateImageInputStyle() {
+      const totalSize = imagePdfItems.reduce((sum, item) => sum + item.size, 0);
+      const count = imagePdfItems.length;
+      imageDropzone.classList.toggle("has-file", count > 0);
+      btnCreateImagePdf.disabled = count === 0;
+
+      if (!count) {
+        imageFileName.textContent = "Upload gambar";
+        imageFileDesc.textContent = "Klik area ini atau jatuhkan beberapa PNG/JPG di sini.";
+        imageFileInfo.innerHTML = `
+          <span class="mini-chip">Format: PNG/JPG</span>
+          <span class="mini-chip">Output: PDF</span>
+        `;
+        imageUploadPill.textContent = "Pilih Gambar";
+        return;
+      }
+
+      imageFileName.textContent = `${count} gambar siap`;
+      imageFileDesc.textContent = "Atur urutan gambar jika perlu, lalu klik Buat PDF.";
+      imageFileInfo.innerHTML = `
+        <span class="mini-chip">${formatUkuranFile(totalSize)}</span>
+        <span class="mini-chip">${count} halaman PDF</span>
+      `;
+      imageUploadPill.textContent = "Tambah Gambar";
+    }
+
+    function renderImageList() {
+      imageList.innerHTML = imagePdfItems.map((item, index) => `
+        <div class="image-item">
+          <img src="${item.dataUrl}" alt="Preview ${escapeHtml(item.name)}">
+          <div>
+            <p class="image-item-title">${index + 1}. ${escapeHtml(item.name)}</p>
+            <div class="image-item-meta">${item.type} • ${Math.round(item.width)} × ${Math.round(item.height)} px • ${formatUkuranFile(item.size)}</div>
+          </div>
+          <div class="image-item-actions">
+            <button type="button" class="btn btn-secondary btn-small" data-image-action="up" data-index="${index}" ${index === 0 ? "disabled" : ""}>Naik</button>
+            <button type="button" class="btn btn-secondary btn-small" data-image-action="down" data-index="${index}" ${index === imagePdfItems.length - 1 ? "disabled" : ""}>Turun</button>
+            <button type="button" class="btn btn-danger btn-small" data-image-action="remove" data-index="${index}">Hapus</button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function updateImageStatus() {
+      if (!imagePdfItems.length) {
+        renderPlaceholder(imageStatus, "Pilih gambar PNG/JPG untuk mulai membuat PDF.");
+        return;
+      }
+      imageStatus.innerHTML = `
+        <div class="result-title">${imagePdfItems.length} gambar siap dikonversi</div>
+        <div class="result-text">Urutan gambar di bawah akan menjadi urutan halaman PDF.</div>
+      `;
+    }
+
+    function refreshImagePdfUi() {
+      renderImageList();
+      updateImageInputStyle();
+      updateImageStatus();
+    }
+
+    async function terimaFileGambar(files) {
+      const selected = [...(files || [])];
+      if (!selected.length) return;
+
+      const accepted = selected.filter(isAcceptedImage);
+      const rejected = selected.length - accepted.length;
+      if (!accepted.length) {
+        renderError(imageStatus, "File yang dipilih bukan PNG/JPG. Pilih gambar dengan format .png, .jpg, atau .jpeg.");
+        inputImages.value = "";
+        return;
+      }
+
+      btnCreateImagePdf.disabled = true;
+      renderPlaceholder(imageStatus, "Membaca gambar...");
+
+      try {
+        const items = await Promise.all(accepted.map(readImageFile));
+        imagePdfItems.push(...items);
+        refreshImagePdfUi();
+        if (rejected) {
+          imageStatus.innerHTML += `<div class="result-text">${rejected} file dilewati karena bukan PNG/JPG.</div>`;
+        }
+      } catch (error) {
+        console.error(error);
+        renderError(imageStatus, "Sebagian gambar gagal dibaca. Coba pilih ulang file PNG/JPG yang valid.");
+      } finally {
+        inputImages.value = "";
+        btnCreateImagePdf.disabled = imagePdfItems.length === 0;
+      }
+    }
+
+    function moveImageItem(index, direction) {
+      const targetIndex = index + direction;
+      if (targetIndex < 0 || targetIndex >= imagePdfItems.length) return;
+      const [item] = imagePdfItems.splice(index, 1);
+      imagePdfItems.splice(targetIndex, 0, item);
+      refreshImagePdfUi();
+    }
+
+    function removeImageItem(index) {
+      imagePdfItems.splice(index, 1);
+      refreshImagePdfUi();
+    }
+
+    function clearImagePdfItems() {
+      imagePdfItems = [];
+      inputImages.value = "";
+      refreshImagePdfUi();
+    }
+
+    function getImagePdfPage(item) {
+      const margin = Number(imageMargin.value || 0);
+      const pageMode = imagePageSize.value;
+      if (pageMode === "a4-portrait") {
+        return { width: 595.28, height: 841.89, orientation: "portrait", margin };
+      }
+      if (pageMode === "a4-landscape") {
+        return { width: 841.89, height: 595.28, orientation: "landscape", margin };
+      }
+      return {
+        width: Math.max(1, item.width + margin * 2),
+        height: Math.max(1, item.height + margin * 2),
+        orientation: item.width >= item.height ? "landscape" : "portrait",
+        margin
+      };
+    }
+
+    function getImagePlacement(item, page) {
+      const availableWidth = Math.max(1, page.width - page.margin * 2);
+      const availableHeight = Math.max(1, page.height - page.margin * 2);
+      const scale = Math.min(availableWidth / item.width, availableHeight / item.height);
+      const width = item.width * scale;
+      const height = item.height * scale;
+      return {
+        x: (page.width - width) / 2,
+        y: (page.height - height) / 2,
+        width,
+        height
+      };
+    }
+
+    async function buatPdfDariGambar() {
+      if (!imagePdfItems.length) {
+        renderError(imageStatus, "Belum ada gambar untuk dibuat PDF.");
+        return;
+      }
+      if (!window.jspdf || !window.jspdf.jsPDF) {
+        renderError(imageStatus, "Library jsPDF gagal dimuat. Pastikan koneksi internet aktif, lalu refresh halaman.");
+        return;
+      }
+
+      btnCreateImagePdf.disabled = true;
+      const labelAwal = btnCreateImagePdf.textContent;
+      btnCreateImagePdf.textContent = "Membuat PDF...";
+      renderPlaceholder(imageStatus, "Membuat file PDF dari gambar...");
+
+      try {
+        const { jsPDF } = window.jspdf;
+        const firstPage = getImagePdfPage(imagePdfItems[0]);
+        const doc = new jsPDF({
+          orientation: firstPage.orientation,
+          unit: "pt",
+          format: [firstPage.width, firstPage.height],
+          compress: true
+        });
+
+        imagePdfItems.forEach((item, index) => {
+          const page = getImagePdfPage(item);
+          if (index > 0) doc.addPage([page.width, page.height], page.orientation);
+          const placement = getImagePlacement(item, page);
+          doc.addImage(item.dataUrl, item.type, placement.x, placement.y, placement.width, placement.height);
+        });
+
+        const baseName = namaFileTanpaEkstensi(imagePdfItems[0].name);
+        doc.save(`${baseName}-gambar-ke-pdf.pdf`);
+        imageStatus.innerHTML = `
+          <div class="result-title">PDF berhasil dibuat</div>
+          <div class="result-text">${imagePdfItems.length} gambar sudah digabung menjadi satu PDF.</div>
+        `;
+      } catch (error) {
+        console.error(error);
+        renderError(imageStatus, "Gagal membuat PDF. Coba gambar lain atau kurangi jumlah/ukuran gambar.");
+      } finally {
+        btnCreateImagePdf.textContent = labelAwal;
+        btnCreateImagePdf.disabled = imagePdfItems.length === 0;
+      }
+    }
+
+
+    function isAcceptedConvertImage(file) {
+      if (!file) return false;
+      const name = String(file.name || "").toLowerCase();
+      return file.type === "image/png" || file.type === "image/jpeg" || file.type === "image/webp" || /\.(png|jpe?g|webp)$/.test(name);
+    }
+
+    function updateImageConvertUi() {
+      renderFileList(imageConvertList, imageConvertFiles);
+      btnConvertImages.disabled = imageConvertFiles.length === 0;
+      if (!imageConvertFiles.length) {
+        renderPlaceholder(imageConvertStatus, "Pilih gambar untuk dikonversi.");
+      } else {
+        imageConvertStatus.innerHTML = `
+          <div class="result-title">${imageConvertFiles.length} gambar siap dikonversi</div>
+          <div class="result-text">Output: ${imageConvertFormat.value.toUpperCase()}${imageConvertFiles.length > 1 ? " dalam ZIP" : ""}.</div>
+        `;
+      }
+    }
+
+    function canvasToBlob(canvas, mimeType, quality) {
+      return new Promise((resolve, reject) => {
+        canvas.toBlob((blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error("BROWSER_NOT_SUPPORT"));
+        }, mimeType, quality);
+      });
+    }
+
+    function loadImageFromFile(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error("READ_FAILED"));
+        reader.onload = () => {
+          const image = new Image();
+          image.onload = () => resolve({ image, dataUrl: String(reader.result || "") });
+          image.onerror = () => reject(new Error("IMAGE_FAILED"));
+          image.src = String(reader.result || "");
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function convertSingleImageFile(file, targetFormat, quality) {
+      const { image } = await loadImageFromFile(file);
+      const canvas = document.createElement("canvas");
+      canvas.width = image.naturalWidth || image.width;
+      canvas.height = image.naturalHeight || image.height;
+      const ctx = canvas.getContext("2d");
+      const mimeType = targetFormat === "jpg" ? "image/jpeg" : targetFormat === "webp" ? "image/webp" : "image/png";
+      if (mimeType === "image/jpeg") {
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+      ctx.drawImage(image, 0, 0);
+      const blob = await canvasToBlob(canvas, mimeType, quality);
+      const filename = `${namaFileTanpaEkstensi(file.name)}.${targetFormat === "jpg" ? "jpg" : targetFormat}`;
+      return { blob, filename };
+    }
+
+    async function konversiGambarFormat() {
+      if (!imageConvertFiles.length) {
+        renderError(imageConvertStatus, "Belum ada gambar untuk dikonversi.");
+        return;
+      }
+
+      btnConvertImages.disabled = true;
+      const labelAwal = btnConvertImages.textContent;
+      btnConvertImages.textContent = "Mengonversi...";
+      renderPlaceholder(imageConvertStatus, "Mengonversi gambar di browser...");
+
+      try {
+        const targetFormat = imageConvertFormat.value || "png";
+        const quality = Number(imageConvertQuality.value || 0.9);
+        const results = [];
+        for (const file of imageConvertFiles) {
+          results.push(await convertSingleImageFile(file, targetFormat, quality));
+        }
+
+        if (results.length === 1) {
+          downloadBlob(results[0].blob, results[0].filename);
+        } else {
+          if (!window.JSZip) throw new Error("ZIP_MISSING");
+          const zip = new JSZip();
+          results.forEach((item) => zip.file(item.filename, item.blob));
+          const blob = await zip.generateAsync({ type: "blob" });
+          downloadBlob(blob, `konversi-gambar-${targetFormat}.zip`);
+        }
+
+        imageConvertStatus.innerHTML = `
+          <div class="result-title">Gambar berhasil dikonversi</div>
+          <div class="result-text">${results.length} file dibuat sebagai ${targetFormat.toUpperCase()}${results.length > 1 ? " dan dibungkus ZIP" : ""}.</div>
+        `;
+      } catch (error) {
+        console.error(error);
+        renderError(imageConvertStatus, "Gagal mengonversi gambar. Coba format PNG/JPG atau kurangi ukuran/jumlah file.");
+      } finally {
+        btnConvertImages.textContent = labelAwal;
+        btnConvertImages.disabled = imageConvertFiles.length === 0;
+      }
+    }
+
+    function updatePdfInputStyle() {
+      const file = inputPdf.files && inputPdf.files[0];
+      if (!file) {
+        pdfDropzone.classList.remove("has-file");
+        pdfFileName.textContent = "Upload file PDF";
+        pdfFileDesc.textContent = "Klik area ini atau jatuhkan file PDF di sini. Aman untuk HP dan desktop.";
+        pdfFileInfo.innerHTML = `
+          <span class="mini-chip">Format: PDF</span>
+          <span class="mini-chip">Output: PNG/JPG per slide</span>
+        `;
+        pdfUploadPill.textContent = "Pilih File";
+        return;
+      }
+
+      pdfDropzone.classList.add("has-file");
+      pdfFileName.textContent = file.name;
+      pdfFileDesc.textContent = "File siap dikonversi. Pilih format dan kualitas render, lalu klik Konversi PDF.";
+      pdfFileInfo.innerHTML = `
+        <span class="mini-chip">${formatUkuranFile(file.size)}</span>
+        <span class="mini-chip">${escapeHtml(file.type || "application/pdf")}</span>
+      `;
+      pdfUploadPill.textContent = "Ganti File";
+    }
+
+    function terimaFilePdf(file) {
+      if (!file) return;
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(file);
+      inputPdf.files = dataTransfer.files;
+      updatePdfInputStyle();
+      resetPdfResult(false);
+      renderPlaceholder(pdfStatus, "File PDF sudah dipilih. Klik Konversi PDF untuk mulai.");
+    }
+
+    function updateProgress(current, total, text) {
+      const percent = total ? Math.round((current / total) * 100) : 0;
+      progressWrap.style.display = "block";
+      progressFill.style.width = `${percent}%`;
+      progressText.textContent = text || `Memproses ${current}/${total} halaman...`;
+    }
+
+    function resetPdfResult(resetInputText = true) {
+      generatedPngs = [];
+      currentSlideIndex = 0;
+      slideViewer.classList.remove("show");
+      slideImage.removeAttribute("src");
+      thumbStrip.innerHTML = "";
+      btnDownloadCurrent.disabled = true;
+      btnDownloadZip.disabled = true;
+      progressWrap.style.display = "none";
+      progressFill.style.width = "0%";
+      progressText.textContent = "Menunggu proses...";
+      if (resetInputText) updatePdfInputStyle();
+      renderPlaceholder(pdfStatus, "Pilih file PDF, lalu klik Konversi PDF.");
+    }
+
+    function downloadDataUrl(dataUrl, filename) {
+      const link = document.createElement("a");
+      link.href = dataUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    }
+
+    function updateSlideViewer() {
+      if (!generatedPngs.length) {
+        slideViewer.classList.remove("show");
+        btnDownloadCurrent.disabled = true;
+        btnDownloadZip.disabled = true;
+        return;
+      }
+
+      currentSlideIndex = Math.max(0, Math.min(currentSlideIndex, generatedPngs.length - 1));
+      const item = generatedPngs[currentSlideIndex];
+      slideViewer.classList.add("show");
+      slideTitle.textContent = item.filename;
+      slideCounter.textContent = `${item.pageNumber} / ${item.totalPages}`;
+      slideImage.src = item.dataUrl;
+      slideMetaText.textContent = `Ukuran PNG: ${Math.round(item.width)} × ${Math.round(item.height)} px`;
+      btnPrevSlide.disabled = currentSlideIndex === 0;
+      btnNextSlide.disabled = currentSlideIndex === generatedPngs.length - 1;
+      btnDownloadCurrent.disabled = false;
+      btnDownloadZip.disabled = false;
+
+      [...thumbStrip.querySelectorAll(".thumb-btn")].forEach((btn, index) => {
+        btn.classList.toggle("active", index === currentSlideIndex);
+      });
+    }
+
+    function rebuildThumbStrip() {
+      thumbStrip.innerHTML = "";
+      generatedPngs.forEach((item, index) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "thumb-btn";
+        btn.innerHTML = `<img src="${item.dataUrl}" alt="Thumbnail halaman ${item.pageNumber}"><span>${item.pageNumber}</span>`;
+        btn.addEventListener("click", () => {
+          currentSlideIndex = index;
+          updateSlideViewer();
+        });
+        thumbStrip.appendChild(btn);
+      });
+    }
+
+    async function konversiPdfKePng() {
+      const file = inputPdf.files && inputPdf.files[0];
+      const scale = Number(inputScale.value || 2);
+
+      if (!file) {
+        renderError(pdfStatus, "File PDF belum dipilih.");
+        return;
+      }
+      if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+        renderError(pdfStatus, "File harus berformat PDF.");
+        return;
+      }
+      if (!window.pdfjsLib) {
+        renderError(pdfStatus, "Library PDF.js gagal dimuat. Pastikan koneksi internet aktif, lalu refresh halaman.");
+        return;
+      }
+
+      btnConvertPdf.disabled = true;
+      btnDownloadCurrent.disabled = true;
+      btnDownloadZip.disabled = true;
+      generatedPngs = [];
+      currentSlideIndex = 0;
+      slideViewer.classList.remove("show");
+      thumbStrip.innerHTML = "";
+      renderPlaceholder(pdfStatus, "Membaca file PDF...");
+      updateProgress(0, 1, "Membaca file PDF...");
+
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        const totalPages = pdf.numPages;
+        const baseName = namaFileAman(file.name);
+
+        renderPlaceholder(pdfStatus, `PDF terbaca: ${totalPages} halaman. Proses render dimulai...`);
+
+        for (let pageNumber = 1; pageNumber <= totalPages; pageNumber++) {
+          updateProgress(pageNumber - 1, totalPages, `Merender slide ${pageNumber} dari ${totalPages}...`);
+
+          const page = await pdf.getPage(pageNumber);
+          const viewport = page.getViewport({ scale });
+          const canvas = document.createElement("canvas");
+          const context = canvas.getContext("2d", { alpha: false });
+
+          canvas.width = Math.floor(viewport.width);
+          canvas.height = Math.floor(viewport.height);
+
+          await page.render({ canvasContext: context, viewport }).promise;
+
+          const format = outputImageFormat.value || "png";
+          const mimeType = format === "jpg" ? "image/jpeg" : "image/png";
+          const extension = format === "jpg" ? "jpg" : "png";
+          const dataUrl = canvas.toDataURL(mimeType, 0.92);
+          const filename = `${baseName}-slide-${String(pageNumber).padStart(2, "0")}.${extension}`;
+          generatedPngs.push({
+            pageNumber,
+            totalPages,
+            filename,
+            dataUrl,
+            width: canvas.width,
+            height: canvas.height
+          });
+
+          updateProgress(pageNumber, totalPages, `Selesai ${pageNumber}/${totalPages} slide.`);
+        }
+
+        rebuildThumbStrip();
+        updateSlideViewer();
+
+        pdfStatus.innerHTML = `
+          <div class="result-title">Berhasil dikonversi</div>
+          <div class="result-text">${generatedPngs.length} halaman PDF sudah menjadi gambar dan ditampilkan slide by slide.</div>
+        `;
+      } catch (error) {
+        console.error(error);
+        renderError(pdfStatus, "Gagal mengonversi PDF. Coba file lain, turunkan kualitas ke 1x/1.5x, atau pastikan file tidak rusak/terproteksi.");
+      } finally {
+        btnConvertPdf.disabled = false;
+      }
+    }
+
+    async function downloadSemuaPngZip() {
+      if (!generatedPngs.length) {
+        renderError(pdfStatus, "Belum ada hasil PNG untuk diunduh.");
+        return;
+      }
+      if (!window.JSZip) {
+        renderError(pdfStatus, "Library ZIP gagal dimuat. Download slide satu per satu, atau aktifkan internet lalu refresh halaman.");
+        return;
+      }
+
+      btnDownloadZip.disabled = true;
+      const teksAwal = btnDownloadZip.textContent;
+      btnDownloadZip.textContent = "Membuat ZIP...";
+
+      try {
+        const zip = new JSZip();
+        generatedPngs.forEach((item) => {
+          const base64 = item.dataUrl.split(",")[1];
+          zip.file(item.filename, base64, { base64: true });
+        });
+        const blob = await zip.generateAsync({ type: "blob" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `hasil-pdf-ke-${(outputImageFormat.value || "png")}-slide.zip`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+      } catch (error) {
+        console.error(error);
+        renderError(pdfStatus, "Gagal membuat file ZIP. Coba download slide satu per satu.");
+      } finally {
+        btnDownloadZip.textContent = teksAwal;
+        btnDownloadZip.disabled = generatedPngs.length === 0;
+      }
+    }
+
+    navTabs.forEach((tab) => {
+      tab.addEventListener("click", () => setAppView(tab.dataset.viewTarget));
+    });
+
+    converterCards.forEach((card) => {
+      card.addEventListener("click", () => setConverterPanel(card.dataset.toolPanel, card));
+    });
+
+    inputAngka.addEventListener("input", () => {
+      formatInputRupiahTanpaDesimal(inputAngka);
+      konversi();
+    });
+
+    inputAngka.addEventListener("paste", (event) => {
+      const text = event.clipboardData && event.clipboardData.getData("text");
+      if (!text) return;
+      event.preventDefault();
+      const digits = hanyaDigitSebelumKoma(text);
+      inputAngka.value = digits ? formatRupiah(digits) : "";
+      konversi();
+    });
+
+    inputNilai.addEventListener("input", () => {
+      formatInputRupiah(inputNilai);
+      hitungPersen();
+    });
+
+    inputDiskon.addEventListener("input", () => {
+      inputDiskon.value = inputDiskon.value.replace(/[^0-9,.-]/g, "");
+      hitungPersen();
+    });
+
+    inputPpn.addEventListener("input", () => {
+      inputPpn.value = inputPpn.value.replace(/[^0-9,.-]/g, "");
+      hitungPersen();
+    });
+
+    hasilPersen.addEventListener("input", (event) => {
+      if (!event.target.classList.contains("percent-result-input")) return;
+      formatInputAngkaBertitik(event.target);
+    });
+
+    tabPersen.addEventListener("click", () => setMode("persen"));
+    tabKolom.addEventListener("click", () => setMode("kolom"));
+
+    btnImportPaste.addEventListener("click", () => importKolomText(pasteKolom.value));
+
+    btnPasteSample.addEventListener("click", () => {
+      pasteKolom.value = [
+        "185.000	60 Roll",
+        "484.000	20 Roll",
+        "484.000	10 Roll",
+        "484.000	10 Roll",
+        "484.000	10 Roll",
+        "185.000	35 Roll"
+      ].join("\n");
+      importKolomText(pasteKolom.value);
+    });
+
+    pasteKolom.addEventListener("paste", () => {
+      setTimeout(() => importKolomText(pasteKolom.value), 0);
+    });
+
+    btnAddRow.addEventListener("click", () => {
+      addCalcRow("", normalisasiOperator(defaultOperator.value), "");
+      hitungSemuaBaris(true);
+    });
+    btnCalcRows.addEventListener("click", () => hitungSemuaBaris(true));
+    btnClearRows.addEventListener("click", resetCalcRows);
+
+    calcGrandTotal.addEventListener("input", () => {
+      formatInputRupiah(calcGrandTotal);
+      calcGrandTotal.dataset.manual = "true";
+      hitungSemuaBaris(false);
+    });
+
+    btnCopyAmounts.addEventListener("click", async () => {
+      const rowsData = ambilDataKolomValid(false);
+      if (!rowsData.length) {
+        hitungSemuaBaris();
+        return;
+      }
+      const jumlahOnly = buildJumlahOnlyCopy(rowsData);
+      copyPreview.value = jumlahOnly.text;
+      await salinHtmlDanTeks(jumlahOnly.html, jumlahOnly.text, btnCopyAmounts);
+    });
+
+    btnCopyTable.addEventListener("click", async () => {
+      const table = hitungSemuaBaris();
+      if (!table) return;
+      await salinHtmlDanTeks(table.html, table.text, btnCopyTable);
+    });
+
+    inputMergePdfs.addEventListener("change", () => {
+      const files = [...(inputMergePdfs.files || [])];
+      const invalid = files.some((file) => !isPdfFile(file));
+      mergePdfFiles = files.filter(isPdfFile);
+      updateMergeUi();
+      if (invalid) mergeStatus.innerHTML += `<div class="result-text">Sebagian file dilewati karena bukan PDF.</div>`;
+    });
+
+    btnMergePdfs.addEventListener("click", gabungkanPdf);
+    btnClearMerge.addEventListener("click", () => {
+      mergePdfFiles = [];
+      inputMergePdfs.value = "";
+      updateMergeUi();
+    });
+
+    inputSplitPdf.addEventListener("change", () => {
+      const file = inputSplitPdf.files && inputSplitPdf.files[0];
+      const valid = isPdfFile(file);
+      btnSplitRange.disabled = !valid;
+      btnSplitAll.disabled = !valid;
+      if (valid) {
+        renderPlaceholder(splitStatus, "PDF siap. Isi range halaman atau klik Pisah Semua ke ZIP.");
+      } else {
+        renderPlaceholder(splitStatus, "Pilih PDF, lalu isi range halaman atau pisahkan semua halaman ke ZIP.");
+      }
+    });
+
+    btnSplitRange.addEventListener("click", splitPdfRange);
+    btnSplitAll.addEventListener("click", splitPdfSemuaHalaman);
+    btnClearSplit.addEventListener("click", () => {
+      inputSplitPdf.value = "";
+      splitRange.value = "";
+      btnSplitRange.disabled = true;
+      btnSplitAll.disabled = true;
+      renderPlaceholder(splitStatus, "Pilih PDF, lalu isi range halaman atau pisahkan semua halaman ke ZIP.");
+    });
+
+    inputRemovePdf.addEventListener("change", () => {
+      const valid = isPdfFile(inputRemovePdf.files && inputRemovePdf.files[0]);
+      btnRemovePages.disabled = !valid;
+      renderPlaceholder(removeStatus, valid ? "PDF siap. Isi halaman yang mau dihapus." : "Pilih PDF, lalu isi halaman yang mau dihapus.");
+    });
+    btnRemovePages.addEventListener("click", hapusHalamanPdf);
+
+    inputExtractPdf.addEventListener("change", () => {
+      const valid = isPdfFile(inputExtractPdf.files && inputExtractPdf.files[0]);
+      btnExtractPages.disabled = !valid;
+      renderPlaceholder(extractStatus, valid ? "PDF siap. Isi halaman yang mau diambil." : "Pilih PDF, lalu isi halaman yang mau diambil.");
+    });
+    btnExtractPages.addEventListener("click", ekstrakHalamanPdf);
+
+    inputRotatePdf.addEventListener("change", () => {
+      const valid = isPdfFile(inputRotatePdf.files && inputRotatePdf.files[0]);
+      btnRotatePdf.disabled = !valid;
+      renderPlaceholder(rotateStatus, valid ? "PDF siap diputar." : "Pilih PDF dan derajat putar.");
+    });
+    btnRotatePdf.addEventListener("click", putarPdf);
+
+    inputWatermarkPdf.addEventListener("change", () => {
+      const valid = isPdfFile(inputWatermarkPdf.files && inputWatermarkPdf.files[0]);
+      btnWatermarkPdf.disabled = !valid;
+      renderPlaceholder(watermarkStatus, valid ? "PDF siap diberi watermark." : "Pilih PDF dan isi teks watermark.");
+    });
+    btnWatermarkPdf.addEventListener("click", tambahWatermarkPdf);
+
+    inputNumberPdf.addEventListener("change", () => {
+      const valid = isPdfFile(inputNumberPdf.files && inputNumberPdf.files[0]);
+      btnAddPageNumbers.disabled = !valid;
+      renderPlaceholder(numberStatus, valid ? "PDF siap diberi nomor halaman." : "Pilih PDF untuk menambahkan nomor halaman.");
+    });
+    btnAddPageNumbers.addEventListener("click", tambahNomorHalaman);
+
+    calcRows.addEventListener("paste", (event) => {
+      const text = event.clipboardData && event.clipboardData.getData("text");
+      if (!text || !text.includes("\n")) return;
+      event.preventDefault();
+      pasteKolom.value = text;
+      importKolomText(text);
+    });
+
+    calcRows.addEventListener("input", (event) => {
+      const target = event.target;
+      if (target.classList.contains("calc-a")) {
+        formatInputRupiah(target);
+        target.closest("tr").querySelector(".calc-result-input").dataset.manual = "false";
+        hitungSemuaBaris(true);
+      } else if (target.classList.contains("calc-b")) {
+        target.closest("tr").querySelector(".calc-result-input").dataset.manual = "false";
+        hitungSemuaBaris(true);
+      } else if (target.classList.contains("calc-result-input")) {
+        formatInputRupiah(target);
+        target.dataset.manual = "true";
+        hitungSemuaBaris(false);
+      }
+    });
+
+    calcRows.addEventListener("change", (event) => {
+      if (event.target.classList.contains("calc-op")) {
+        const row = event.target.closest("tr");
+        if (row) row.querySelector(".calc-result-input").dataset.manual = "false";
+        hitungSemuaBaris(true);
+      }
+    });
+
+    calcRows.addEventListener("click", (event) => {
+      const btn = event.target.closest(".btn-delete-row");
+      if (!btn) return;
+      btn.closest("tr").remove();
+      if (!calcRows.children.length) addCalcRow();
+      hitungSemuaBaris(false);
+    });
+
+    document.addEventListener("click", (event) => {
+      const tombol = event.target.closest(".btn-copy");
+      if (!tombol) return;
+      if (tombol.dataset.copyMode) {
+        tombol.dataset.copy = buildPercentCopy(tombol.dataset.copyMode);
+      }
+      salinTeks(tombol.dataset.copy || "", tombol);
+    });
+
+    inputPdf.addEventListener("change", () => {
+      updatePdfInputStyle();
+      resetPdfResult(false);
+      const file = inputPdf.files && inputPdf.files[0];
+      if (file) renderPlaceholder(pdfStatus, "File PDF sudah dipilih. Klik Konversi PDF untuk mulai.");
+    });
+
+    pdfDropzone.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        inputPdf.click();
+      }
+    });
+
+    ["dragenter", "dragover"].forEach((eventName) => {
+      pdfDropzone.addEventListener(eventName, (event) => {
+        event.preventDefault();
+        pdfDropzone.classList.add("drag-over");
+      });
+    });
+
+    ["dragleave", "drop"].forEach((eventName) => {
+      pdfDropzone.addEventListener(eventName, (event) => {
+        event.preventDefault();
+        pdfDropzone.classList.remove("drag-over");
+      });
+    });
+
+    pdfDropzone.addEventListener("drop", (event) => {
+      const file = event.dataTransfer.files && event.dataTransfer.files[0];
+      if (!file) return;
+      if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+        renderError(pdfStatus, "File yang dijatuhkan bukan PDF. Pilih file .pdf.");
+        return;
+      }
+      terimaFilePdf(file);
+    });
+
+    inputImages.addEventListener("change", () => {
+      terimaFileGambar(inputImages.files);
+    });
+
+    imageDropzone.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        inputImages.click();
+      }
+    });
+
+    ["dragenter", "dragover"].forEach((eventName) => {
+      imageDropzone.addEventListener(eventName, (event) => {
+        event.preventDefault();
+        imageDropzone.classList.add("drag-over");
+      });
+    });
+
+    ["dragleave", "drop"].forEach((eventName) => {
+      imageDropzone.addEventListener(eventName, (event) => {
+        event.preventDefault();
+        imageDropzone.classList.remove("drag-over");
+      });
+    });
+
+    imageDropzone.addEventListener("drop", (event) => {
+      terimaFileGambar(event.dataTransfer.files);
+    });
+
+    imageList.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-image-action]");
+      if (!button) return;
+      const index = Number(button.dataset.index);
+      if (!Number.isInteger(index)) return;
+      if (button.dataset.imageAction === "up") moveImageItem(index, -1);
+      if (button.dataset.imageAction === "down") moveImageItem(index, 1);
+      if (button.dataset.imageAction === "remove") removeImageItem(index);
+    });
+
+    btnCreateImagePdf.addEventListener("click", buatPdfDariGambar);
+    btnClearImages.addEventListener("click", clearImagePdfItems);
+    imagePageSize.addEventListener("change", updateImageStatus);
+    imageMargin.addEventListener("change", updateImageStatus);
+
+    inputImageConvert.addEventListener("change", () => {
+      const files = [...(inputImageConvert.files || [])];
+      const invalid = files.some((file) => !isAcceptedConvertImage(file));
+      imageConvertFiles = files.filter(isAcceptedConvertImage);
+      updateImageConvertUi();
+      if (invalid) imageConvertStatus.innerHTML += `<div class="result-text">Sebagian file dilewati karena bukan PNG/JPG/WEBP.</div>`;
+    });
+    imageConvertFormat.addEventListener("change", updateImageConvertUi);
+    imageConvertQuality.addEventListener("change", updateImageConvertUi);
+    btnConvertImages.addEventListener("click", konversiGambarFormat);
+    btnClearImageConvert.addEventListener("click", () => {
+      imageConvertFiles = [];
+      inputImageConvert.value = "";
+      updateImageConvertUi();
+    });
+
+    btnConvertPdf.addEventListener("click", konversiPdfKePng);
+    btnDownloadZip.addEventListener("click", downloadSemuaPngZip);
+    btnDownloadCurrent.addEventListener("click", () => {
+      if (!generatedPngs.length) return;
+      const item = generatedPngs[currentSlideIndex];
+      downloadDataUrl(item.dataUrl, item.filename);
+    });
+
+    btnClearPdf.addEventListener("click", () => {
+      inputPdf.value = "";
+      resetPdfResult(true);
+    });
+
+    btnPrevSlide.addEventListener("click", () => {
+      currentSlideIndex -= 1;
+      updateSlideViewer();
+    });
+
+    btnNextSlide.addEventListener("click", () => {
+      currentSlideIndex += 1;
+      updateSlideViewer();
+    });
+
+    resetCalcRows();
+    hitungPersen();
+    updateMergeUi();
+    refreshImagePdfUi();
+    updateImageConvertUi();
+  </script>
+  <script>
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("./sw.js");
+  }
+  </script>
+</body>
+</html>
