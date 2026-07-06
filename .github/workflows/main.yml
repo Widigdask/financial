@@ -32,9 +32,10 @@ jobs:
       run: |
         mkdir windows-app
         copy bin\neutralino-win_x64.exe windows-app\Farmasi.exe
-        if exist resources.neu copy resources.neu windows-app\resources.neu
-        if exist dist\resources.neu copy dist\resources.neu windows-app\resources.neu
+        if exist dist\Aplikasi-Financial\resources.neu copy dist\Aplikasi-Financial\resources.neu windows-app\resources.neu
         if exist dist\Financial\resources.neu copy dist\Financial\resources.neu windows-app\resources.neu
+        if exist dist\resources.neu copy dist\resources.neu windows-app\resources.neu
+        if exist resources.neu copy resources.neu windows-app\resources.neu
       shell: cmd
 
     - name: Upload EXE Result
