@@ -1,1 +1,21 @@
-
+{
+  "applicationId": "js.neutralino.farmasi",
+  "defaultMode": "window",
+  "port": 0,
+  "documentRoot": "/resources/",
+  "modes": {
+    "window": {
+      "title": "ETIKET FARMASI",
+      "width": 800,
+      "height": 600,
+      "minWidth": 400,
+      "minHeight": 300
+    }
+  },
+  "cli": {
+    "binaryName": "Farmasi",
+    "resourcesPath": "resources",
+    "extensionsPath": "extensions",
+    "clientLibrary": "/resources/neutralino.js"
+  }
+}
