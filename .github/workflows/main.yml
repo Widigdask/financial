@@ -26,12 +26,17 @@ jobs:
       run: neu update
 
     - name: Build Application
-      run: neu build --release
+      run: neu build
+
+    - name: Prepare Final Windows Folder
+      run: |
+        mkdir windows-app
+        copy bin\neutralino-win_x64.exe windows-app\Farmasi.exe
+        copy dist\resources.neu windows-app\resources.neu
+      shell: cmd
 
     - name: Upload EXE Result
       uses: actions/upload-artifact@v4
       with:
         name: Aplikasi-Farmasi-Windows
-        path: |
-          dist/
-          bin/
+        path: windows-app/
