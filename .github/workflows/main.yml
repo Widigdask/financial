@@ -1,26 +1,32 @@
 name: Build EXE
-on: [push]
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
+
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+    - name: Checkout Code
+      uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
 
-      - name: Install Neutralino CLI
-        run: npm install -g @neutralinojs/neu
+    - name: Install Neutralino CLI
+      run: npm install -g @neutralinojs/neu
 
-      - name: Build Application
-        run: neu build
+    - name: Build Application
+      run: neu build
 
-      - name: Upload EXE Result
-        uses: actions/upload-artifact@v4
-        with:
-          name: Aplikasi-Financial-Windows
-          path: dist/
+    - name: Upload EXE Result
+      uses: actions/upload-artifact@v4
+      with:
+        name: Aplikasi-Financial-Windows
+        path: dist/
