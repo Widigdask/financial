@@ -1,11 +1,11 @@
 {
-  "applicationId": "js.neutralino.farmasi",
+  "applicationId": "js.neutralino.financial",
   "defaultMode": "window",
   "port": 0,
-  "documentRoot": "/",
+  "documentRoot": "/resources/",
   "modes": {
     "window": {
-      "title": "ETIKET FARMASI",
+      "title": "FINANCIAL FREEDOM",
       "width": 800,
       "height": 600,
       "minWidth": 400,
@@ -13,9 +13,9 @@
     }
   },
   "cli": {
-    "binaryName": "Farmasi",
-    "resourcesPath": "/",
-    "extensionsPath": "/extensions/",
-    "clientLibrary": "/neutralino.js"
+    "binaryName": "Financial",
+    "resourcesPath": "resources",
+    "extensionsPath": "extensions",
+    "clientLibrary": "/resources/neutralino.js"
   }
 }
